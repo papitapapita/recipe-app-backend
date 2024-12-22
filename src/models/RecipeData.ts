@@ -1,14 +1,19 @@
+import { InstructionSummary } from './Instruction';
+import { Tag } from './Tag';
+
 export interface RecipeData {
   recipeId: number;
   title: string;
   description?: string;
+  imageUrl: string;
   preparingTime?: number;
   cookingTime?: number;
-  imageUrl?: string;
   calories?: number;
   carbs?: number;
   protein?: number;
   fat?: number;
-  createdAt?: Date;
-  updatedAt: Date;
+  instructions: InstructionSummary[];
+  tags?: Tag[];
+  createdAt?: string;
+  updatedAt: string;
 }

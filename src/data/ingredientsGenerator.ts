@@ -15,4 +15,6 @@ const ingredientsGenerator = objectGenerator<Ingredient>(
   })
 );
 
+console.log(ingredientsGenerator(10));
+
 export { ingredientsGenerator };

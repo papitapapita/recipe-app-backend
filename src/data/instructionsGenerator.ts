@@ -1,16 +1,15 @@
 import { faker } from '@faker-js/faker';
-import { InstructionSummary as Instruction } from '../models/Instruction';
+import { InstructionDTO as Instruction } from '../types/Instruction';
+import { objectGenerator } from './objectGenerator';
 
-export function createInstructions(amount: number) {
-  const instructions: Instruction[] = [];
+const createInstructions = objectGenerator<Instruction>(
+  (index?: number) => ({
+    step: (index ?? 0) + 1,
+    title: faker.food.adjective(),
+    description: faker.food.description()
+  })
+);
 
-  for (let i = 0; i < amount; i++) {
-    instructions.push({
-      step: i + 1,
-      title: faker.food.adjective,
-      description: faker.food.description
-    });
-  }
+console.log(createInstructions(10));
 
-  return instructions;
-}
+export { createInstructions };

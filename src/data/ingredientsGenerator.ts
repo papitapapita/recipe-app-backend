@@ -4,7 +4,7 @@ import { objectGenerator } from './objectGenerator';
 
 const measurements = ['kg', 'ml', 'gr', 'lb'];
 
-const ingredientsGenerator = objectGenerator<Ingredient>(
+const createIngredients = objectGenerator<Ingredient>(
   () => ({
     name: faker.food.ingredient(),
     quantity: faker.number.int(1000),
@@ -15,6 +15,6 @@ const ingredientsGenerator = objectGenerator<Ingredient>(
   })
 );
 
-console.log(ingredientsGenerator(10));
+console.log(createIngredients(10));
 
-export { ingredientsGenerator };
+export { createIngredients };

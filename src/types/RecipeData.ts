@@ -1,4 +1,4 @@
-import { InstructionSummary } from './Instruction';
+import { InstructionDTO as Instruction } from './Instruction';
 import { Tag } from './Tag';
 
 export interface RecipeData {
@@ -12,7 +12,7 @@ export interface RecipeData {
   carbs?: number;
   protein?: number;
   fat?: number;
-  instructions: InstructionSummary[];
+  instructions: Instruction[];
   tags?: Tag[];
   createdAt?: string;
   updatedAt: string;

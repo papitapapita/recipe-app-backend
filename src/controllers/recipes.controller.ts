@@ -15,6 +15,7 @@ export default class RecipesController {
       let recipes: RecipeData[];
 
       if (size) {
+        
       } else {
         recipes = await recipesService.getAll();
       }

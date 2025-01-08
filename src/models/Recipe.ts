@@ -17,7 +17,7 @@ export class Recipe implements RecipeData {
   createdAt?: string;
   updatedAt: string;
 
-  constructor(data: RecipeData) {
+  constructor(data?: RecipeData) {
     this.recipeId = data.recipeId;
     this.title = data.title;
     this.description = data.description;

@@ -10,6 +10,4 @@ const createInstructions = objectGenerator<Instruction>(
   })
 );
 
-console.log(createInstructions(10));
-
 export { createInstructions };

@@ -2,7 +2,7 @@ import { InstructionDTO as Instruction } from './Instruction';
 import { Tag } from './Tag';
 
 export interface RecipeData {
-  //recipeId: number;
+  id: number;
   title: string;
   description?: string;
   imageUrl: string;

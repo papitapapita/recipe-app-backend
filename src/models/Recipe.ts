@@ -1,8 +1,8 @@
-import { RecipeData } from './RecipeData';
-import { InstructionSummary } from './Instruction';
-import { Tag } from './Tag';
+import { RecipeData } from '../types/RecipeData';
+import { InstructionDTO } from '../types/Instruction';
+import { Tag } from '../types/Tag';
 export class Recipe implements RecipeData {
-  recipeId: number;
+  id: number;
   title: string;
   description?: string;
   imageUrl: string;
@@ -12,13 +12,13 @@ export class Recipe implements RecipeData {
   carbs?: number;
   protein?: number;
   fat?: number;
-  instructions: InstructionSummary[];
+  instructions: InstructionDTO[];
   tags?: Tag[];
   createdAt?: string;
   updatedAt: string;
 
-  constructor(data?: RecipeData) {
-    this.recipeId = data.recipeId;
+  constructor(data: RecipeData) {
+    this.id = data.id;
     this.title = data.title;
     this.description = data.description;
     this.preparingTime = data.preparingTime;

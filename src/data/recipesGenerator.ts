@@ -8,7 +8,7 @@ import { Recipe } from '../models/Recipe';
 const createRecipes = objectGenerator<RecipeData>(
   (index?) =>
     new Recipe({
-      recipeId: index!,
+      id: index!,
       title: faker.food.dish(),
       description: faker.food.description(),
       imageUrl: faker.image.url(),

@@ -1,8 +1,7 @@
 import { createRecipes } from '../data/recipesGenerator';
-import { Recipe, RecipeData } from '../models/index';
+import { Recipe } from '../models/index';
+import { RecipeData } from '../types/RecipeData';
 import boom from '../../node_modules/@hapi/boom/lib/index';
-type Id = Pick<RecipeData, 'id'>;
-
 class RecipesService {
   private recipes: RecipeData[] = [];
 
@@ -35,18 +34,18 @@ class RecipesService {
   }
 
   public async findRecipe(
-    id: Id
+    id: number
   ): Promise<RecipeData | undefined> {
     return this.recipes.find((recipe) => recipe.id === id);
   }
 
-  public async findRecipeIndex(id: Id) {
+  private async findRecipeIndex(id: number) {
     return this.recipes.findIndex(
       (recipe) => recipe.id === id
     );
   }
 
-  public async getRecipe(id: Id): Promise<RecipeData> {
+  public async getRecipe(id: number): Promise<RecipeData> {
     const recipe = await this.findRecipe(id);
 
     if (!recipe) {
@@ -59,8 +58,10 @@ class RecipesService {
   private validate(
     recipe: Partial<RecipeData>,
     isPartial = false
-  ) {
-    const requiredProperties = Object.keys(new Recipe());
+  ): RecipeData | Partial<RecipeData> {
+    const requiredProperties = Object.keys(
+      createRecipes(1)[0]
+    );
 
     for (const key of Object.keys(recipe)) {
       if (!requiredProperties.includes(key)) {
@@ -82,7 +83,7 @@ class RecipesService {
   }
 
   public async updateRecipe(
-    id: Id,
+    id: number,
     recipeUpdates: Partial<RecipeData>
   ) {
     const recipeIndex = await this.findRecipeIndex(id);
@@ -98,14 +99,16 @@ class RecipesService {
       ...validUpdates
     });
 
-    const validatedRecipe = this.validate(updatedRecipe);
+    const validatedRecipe = this.validate(
+      updatedRecipe
+    ) as RecipeData;
 
     this.recipes[recipeIndex] = validatedRecipe;
     return validatedRecipe;
   }
 
   public async replaceRecipe(
-    id: Id,
+    id: number,
     recipe: Partial<RecipeData>
   ) {
     const recipeIndex = await this.findRecipeIndex(id);
@@ -115,24 +118,26 @@ class RecipesService {
     }
 
     const validatedRecipe = this.validate(recipe);
-    this.recipes[recipeIndex] = validatedRecipe;
+    this.recipes[recipeIndex] =
+      validatedRecipe as RecipeData;
 
     return validatedRecipe;
   }
 
-  public async createRecipe(
-    recipe: Omit<RecipeData, 'id'>
-  ) {
-    const createdRecipe = this.validate({
+  public async createRecipe(recipe: RecipeData) {
+    const derivedRecipe = {
       ...recipe,
-      id: this.recipes.length + 1
-    });
+      id: this.recipes.length
+    };
+    const createdRecipe = this.validate(
+      derivedRecipe
+    ) as RecipeData;
 
     this.recipes.push(createdRecipe);
     return createdRecipe;
   }
 
-  public async deleteRecipe(id: Id) {
+  public async deleteRecipe(id: number) {
     const recipeIndex = await this.findRecipeIndex(id);
 
     if (recipeIndex === -1) {
@@ -147,5 +152,28 @@ class RecipesService {
 
 const recipesService = new RecipesService();
 recipesService.initialize();
+console.log('------------ GET ------------');
+console.log(await recipesService.getRecipes(2));
+console.log('------------ FIND ------------');
+console.log(await recipesService.findRecipe(2));
+console.log('------------ CREATE -----------');
+console.log(
+  await recipesService.createRecipe(createRecipes(1)[0])
+);
+console.log('--------- UPDATE -----------');
+console.log(
+  await recipesService.updateRecipe(1, {
+    title: 'New Title'
+  })
+);
+console.log(await recipesService.getRecipe(1));
+console.log('---------- REPLACE ------------');
+console.log(await recipesService.getRecipes(2));
+console.log(
+  await recipesService.replaceRecipe(1, createRecipes(1)[0])
+);
+console.log('---------- DELETE ------------');
+console.log(await recipesService.deleteRecipe(2));
+console.error(await recipesService.getRecipe(2));
 
 export { recipesService };

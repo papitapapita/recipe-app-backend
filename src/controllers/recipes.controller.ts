@@ -1,26 +1,47 @@
-import { RecipeData } from '../models/RecipeData';
-import { Request, Response } from 'express';
+import { recipesService } from '../services/recipes.service';
 import tryCatch from '../utils/tryCatch';
-import Boom from '@hapi/Boom';
+import boom from '../../node_modules/@hapi/boom/lib/index';
+import { RecipeData } from '../types/RecipeData';
 
-export default class RecipesController {
-  async getRecipes(
-    req: Request,
-    res: Response,
-    next: Function
-  ): Promise<RecipeData[]> {
-    return tryCatch(async () => {
-      let { size } = req.query;
+export default class ProductsController {
+  public getRecipe() {
+    return tryCatch(async (req, res) => {
+      const { id } = req.params;
+      const recipe = await recipesService.getRecipe(
+        parseInt(id)
+      );
+
+      res.status(200).json({
+        success: true,
+        message: 'Recipe Retrieved',
+        data: recipe
+      });
+    });
+  }
+
+  public getRecipes() {
+    return tryCatch(async (req, res) => {
+      const { size } = req.query;
 
       let recipes: RecipeData[];
 
-      if (size) {
-        
+      if (size && typeof size === 'string') {
+        if (isNaN(parseInt(size)) || parseInt(size) < 0) {
+          throw boom.badRequest('Invalid size paramenter');
+        }
+
+        const parsedSize = parseInt(size);
+        recipes =
+          await recipesService.getRecipes(parsedSize);
       } else {
-        recipes = await recipesService.getAll();
+        recipes = await recipesService.getRecipes();
       }
 
-      return recipes;
+      res.status(200).send({
+        success: true,
+        message: 'Recipes Retrieved',
+        data: recipes
+      });
     });
   }
 }

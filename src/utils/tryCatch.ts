@@ -1,12 +1,19 @@
-import { Request, Response } from 'express';
-import { NextFunctionHandler } from '../types/nextFunction';
+import { NextFunction, Request, Response } from 'express';
 
-export default function tryCatch<T>(
-  func: NextFunctionHandler<T>
-): NextFunctionHandler<void> {
-  return async (req, res, next) => {
+export default function tryCatch(
+  callback: (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => void | Promise<void>
+) {
+  return async function (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
-      await func(req, res, next);
+      await callback(req, res, next);
     } catch (error) {
       next(error);
     }

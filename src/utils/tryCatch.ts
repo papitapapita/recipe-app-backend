@@ -1,11 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
+import MiddlewareFunction from '../types/MiddlewareFunction';
 
 export default function tryCatch(
-  callback: (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => void | Promise<void>
+  callback: MiddlewareFunction
 ) {
   return async function (
     req: Request,

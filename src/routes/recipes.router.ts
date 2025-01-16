@@ -1,44 +1,49 @@
 import express from 'express';
 import validate from '../middlewares/validator';
-import { idSchema, recipeSchema } from '../utils/schemas';
+import {
+  idSchema,
+  recipeSchema,
+  softRecipeSchema
+} from '../utils/schemas';
 import RecipeController from '../controllers/recipes.controller';
 
-const {
-  getRecipe,
-  getRecipes,
-  createRecipes,
-  updateRecipe,
-  replaceRecipe,
-  deleteRecipe
-} = new RecipeController();
+const recipeController = new RecipeController();
 
 const router = express.Router();
 
-router.get('/', getRecipes());
+router.get('/', recipeController.getRecipes());
 
-router.get('/:id', validate(idSchema, 'params'), getRecipe());
+router.get(
+  '/:id',
+  validate(idSchema, 'params'),
+  recipeController.getRecipe()
+);
 
-router.post('/', validate(recipeSchema, 'body'), createRecipes());
+router.post(
+  '/',
+  validate(recipeSchema, 'body'),
+  recipeController.createRecipes()
+);
 
 router.put(
   '/:id',
   validate(idSchema, 'params'),
   validate(recipeSchema, 'body'),
-  replaceRecipe()
+  recipeController.replaceRecipe()
 );
 
 router.patch(
   '/:id',
   validate(idSchema, 'params'),
-  validate(recipeSchema, 'body'),
-  updateRecipe()
+  validate(softRecipeSchema, 'body'),
+  recipeController.updateRecipe()
 );
 
 router.delete(
   '/:id',
   validate(idSchema, 'params'),
-  validate(recipeSchema, 'body'),
-  deleteRecipe()
+  recipeController.deleteRecipe()
 );
 
+export default router;
 //router.get('/search', validate);

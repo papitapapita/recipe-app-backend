@@ -1,6 +1,6 @@
 import { createRecipes } from '../data/recipesGenerator';
-import { Recipe } from '../models/index';
 import { RecipeData } from '../types/RecipeData';
+import getConnection from '../libs/postgresql';
 import boom from '../../node_modules/@hapi/boom/lib/index';
 class RecipesService {
   private recipes: RecipeData[] = [];
@@ -24,13 +24,17 @@ class RecipesService {
   }
 
   public async getRecipes(limit?: number) {
-    await this.ensureInitialized();
+    //await this.ensureInitialized();
 
-    if (!limit) {
-      return this.recipes;
+    console.log('Hello there');
+    const client = await getConnection();
+    const recipes = await client.query('SELECT * FROM recipes');
+
+    if (!limit || limit >= recipes.rows.length) {
+      return recipes.rows;
     }
-
-    return this.recipes.slice(0, limit);
+    return recipes.rows.slice(0, limit);
+    //return this.recipes.slice(0, limit);
   }
 
   public async findRecipe(
@@ -40,9 +44,7 @@ class RecipesService {
   }
 
   private async findRecipeIndex(id: number) {
-    return this.recipes.findIndex(
-      (recipe) => recipe.id === id
-    );
+    return this.recipes.findIndex((recipe) => recipe.id === id);
   }
 
   public async getRecipe(id: number): Promise<RecipeData> {
@@ -59,9 +61,7 @@ class RecipesService {
     recipe: Partial<RecipeData>,
     isPartial = false
   ): RecipeData | Partial<RecipeData> {
-    const requiredProperties = Object.keys(
-      createRecipes(1)[0]
-    );
+    const requiredProperties = Object.keys(createRecipes(1)[0]);
 
     for (const key of Object.keys(recipe)) {
       if (!requiredProperties.includes(key)) {
@@ -72,9 +72,7 @@ class RecipesService {
     if (!isPartial) {
       for (const prop of requiredProperties) {
         if (!(prop in recipe)) {
-          throw boom.expectationFailed(
-            `Missing property: ${prop}`
-          );
+          throw boom.expectationFailed(`Missing property: ${prop}`);
         }
       }
     }
@@ -96,7 +94,8 @@ class RecipesService {
 
     const updatedRecipe = this.validate({
       ...this.recipes[recipeIndex],
-      ...validUpdates
+      ...validUpdates,
+      updatedAt: new Date().toString()
     });
 
     const validatedRecipe = this.validate(
@@ -117,21 +116,23 @@ class RecipesService {
       throw boom.notFound(`Recipe with ID ${id} not found`);
     }
 
-    const validatedRecipe = this.validate(recipe);
-    this.recipes[recipeIndex] =
-      validatedRecipe as RecipeData;
+    const validatedRecipe = {
+      ...this.validate(recipe),
+      updatedAt: new Date().toString()
+    };
+    this.recipes[recipeIndex] = validatedRecipe as RecipeData;
 
     return validatedRecipe;
   }
 
   public async createRecipe(recipe: RecipeData) {
     const derivedRecipe = {
+      id: this.recipes.length,
       ...recipe,
-      id: this.recipes.length
+      createdAt: new Date().toString(),
+      updatedAt: new Date().toString()
     };
-    const createdRecipe = this.validate(
-      derivedRecipe
-    ) as RecipeData;
+    const createdRecipe = this.validate(derivedRecipe) as RecipeData;
 
     this.recipes.push(createdRecipe);
     return createdRecipe;
@@ -144,22 +145,19 @@ class RecipesService {
       throw boom.notFound(`Recipe with ID ${id} not found`);
     }
 
-    this.recipes = this.recipes.filter(
-      (recipe) => recipe.id !== id
-    );
+    this.recipes = this.recipes.filter((recipe) => recipe.id !== id);
   }
 }
 
 const recipesService = new RecipesService();
+/*
 recipesService.initialize();
 console.log('------------ GET ------------');
 console.log(await recipesService.getRecipes(2));
-console.log('------------ FIND ------------');
+/*console.log('------------ FIND ------------');
 console.log(await recipesService.findRecipe(2));
 console.log('------------ CREATE -----------');
-console.log(
-  await recipesService.createRecipe(createRecipes(1)[0])
-);
+console.log(await recipesService.createRecipe(createRecipes(1)[0]));
 console.log('--------- UPDATE -----------');
 console.log(
   await recipesService.updateRecipe(1, {
@@ -175,5 +173,5 @@ console.log(
 console.log('---------- DELETE ------------');
 console.log(await recipesService.deleteRecipe(2));
 console.error(await recipesService.getRecipe(2));
-
+ */
 export { recipesService };

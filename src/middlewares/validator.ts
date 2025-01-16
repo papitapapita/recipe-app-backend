@@ -6,7 +6,7 @@ export default function validate<T>(
   schema: ObjectSchema<T>,
   property: keyof Request = 'body'
 ) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
     const { error, value } = schema.validate(req[property], {
       abortEarly: false,
       stripUnknown: true

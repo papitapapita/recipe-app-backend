@@ -4,42 +4,29 @@ import Joi from 'joi';
 const title = Joi.string().min(3).max(100).messages({
   'string.base': 'Title should be a type of text',
   'string.empty': 'Title cannot be an empty field',
-  'string.min':
-    'Title should have a minimum length of {#limit}',
-  'string.max':
-    'Title should have a maximum length of {#limit}'
+  'string.min': 'Title should have a minimum length of {#limit}',
+  'string.max': 'Title should have a maximum length of {#limit}'
 });
 const description = Joi.string().min(5).max(100).messages({
   'string.base': 'Description should be a type of text',
   'string.empty': 'Description cannot be an empty field',
   'string.min':
     'Description should have a minimum length of {#limit}',
-  'string.max':
-    'Description should have a maximum length of {#limit}'
+  'string.max': 'Description should have a maximum length of {#limit}'
 });
 const imageUrl = Joi.string().uri().messages({
   'string.uri': 'Image URL should be a valid URI'
 });
-const preparingTime = Joi.number()
-  .positive()
-  .integer()
-  .messages({
-    'number.base':
-      'Preparing time should be a type of number',
-    'number.positive':
-      'Preparing time should be a positive number',
-    'number.integer': 'Preparing time should be an integer'
-  });
-const cookingTime = Joi.number()
-  .positive()
-  .integer()
-  .messages({
-    'number.base':
-      'Cooking time should be a type of number',
-    'number.positive':
-      'Cooking time should be a positive number',
-    'number.integer': 'Cooking time should be an integer'
-  });
+const preparingTime = Joi.number().positive().integer().messages({
+  'number.base': 'Preparing time should be a type of number',
+  'number.positive': 'Preparing time should be a positive number',
+  'number.integer': 'Preparing time should be an integer'
+});
+const cookingTime = Joi.number().positive().integer().messages({
+  'number.base': 'Cooking time should be a type of number',
+  'number.positive': 'Cooking time should be a positive number',
+  'number.integer': 'Cooking time should be an integer'
+});
 const calories = Joi.number().positive().messages({
   'number.base': 'Calories should be a type of number',
   'number.positive': 'Calories should be a positive number'
@@ -57,17 +44,10 @@ const fat = Joi.number().positive().messages({
   'number.positive': 'Fat should be a positive number'
 });
 const instructions = Joi.array().min(1).messages({
-  'array.min':
-    'Instructions should have at least {#limit} items'
+  'array.min': 'Instructions should have at least {#limit} items'
 });
 const tags = Joi.array().min(1).messages({
   'array.min': 'Tags should have at least {#limit} items'
-});
-const createdAt = Joi.date().messages({
-  'date.base': 'Created at should be a valid date'
-});
-const updatedAt = Joi.date().messages({
-  'date.base': 'Updated at should be a valid date'
 });
 
 // INGREDIENT PROPERTIES
@@ -83,37 +63,26 @@ const measurement = Joi.string().messages({
 });
 
 // INSTRUCTION PROPERTIES
-const instructionId = Joi.number()
-  .positive()
-  .integer()
-  .messages({
-    'number.base':
-      'Instruction ID should be a type of number',
-    'number.positive':
-      'Instruction ID should be a positive number',
-    'number.integer': 'Instruction ID should be an integer'
-  });
-const recipeId = Joi.number()
-  .positive()
-  .integer()
-  .messages({
-    'number.base': 'Recipe ID should be a type of number',
-    'number.positive':
-      'Recipe ID should be a positive number',
-    'number.integer': 'Recipe ID should be an integer'
-  });
+const instructionId = Joi.number().positive().integer().messages({
+  'number.base': 'Instruction ID should be a type of number',
+  'number.positive': 'Instruction ID should be a positive number',
+  'number.integer': 'Instruction ID should be an integer'
+});
+const recipeId = Joi.number().positive().integer().messages({
+  'number.base': 'Recipe ID should be a type of number',
+  'number.positive': 'Recipe ID should be a positive number',
+  'number.integer': 'Recipe ID should be an integer'
+});
 const step = Joi.number().positive().integer().messages({
   'number.base': 'Step should be a type of number',
   'number.positive': 'Step should be a positive number',
   'number.integer': 'Step should be an integer'
 });
 const instructionTitle = Joi.string().messages({
-  'string.base':
-    'Instruction title should be a type of text'
+  'string.base': 'Instruction title should be a type of text'
 });
 const instructionDescription = Joi.string().messages({
-  'string.base':
-    'Instruction description should be a type of text'
+  'string.base': 'Instruction description should be a type of text'
 });
 
 // TAG PROPERTIES
@@ -132,16 +101,12 @@ const tagName = Joi.string().messages({
  * - `id` (required): A positive integer representing the ID.
  */
 const idSchema = Joi.object({
-  id: Joi.number()
-    .positive()
-    .integer()
-    .required()
-    .messages({
-      'number.base': 'ID should be a type of number',
-      'number.positive': 'ID should be a positive number',
-      'number.integer': 'ID should be an integer',
-      'any.required': 'ID is a required field'
-    })
+  id: Joi.number().integer().required().messages({
+    'number.base': 'ID should be a type of number',
+    'number.positive': 'ID should be a positive number',
+    'number.integer': 'ID should be an integer',
+    'any.required': 'ID is a required field'
+  })
 });
 
 const recipeSchema = Joi.object({
@@ -155,9 +120,7 @@ const recipeSchema = Joi.object({
   protein: protein,
   fat: fat,
   instructions: instructions.required(),
-  tags: tags,
-  createdAt: createdAt.required(),
-  updatedAt: updatedAt.required()
+  tags: tags
 });
 
 const softRecipeSchema = Joi.object({
@@ -171,9 +134,7 @@ const softRecipeSchema = Joi.object({
   protein: protein,
   fat: fat,
   instructions: instructions,
-  tags: tags,
-  createdAt: createdAt,
-  updatedAt: updatedAt
+  tags: tags
 });
 
 const ingredientsSchema = Joi.object({

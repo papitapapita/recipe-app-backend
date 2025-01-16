@@ -2,18 +2,17 @@ import { recipesService } from '../services/recipes.service';
 import { Response } from 'express';
 import tryCatch from '../utils/tryCatch';
 import boom from '../../node_modules/@hapi/boom/lib/index';
-import { RecipeData } from '../types/RecipeData';
 
 export default class RecipeController {
-  public validateId(id: string | undefined): number {
-    if (!id || isNaN(parseInt(id))) {
+  private validateId(id: string | undefined): number {
+    if (id === undefined || isNaN(parseInt(id))) {
       throw boom.badRequest('Invalid or missing ID');
     }
 
     return parseInt(id);
   }
 
-  public sendResponse<T>(
+  private sendResponse<T>(
     res: Response,
     statusCode: number,
     message: string,
@@ -32,12 +31,7 @@ export default class RecipeController {
 
       const recipe = await recipesService.getRecipe(id);
 
-      this.sendResponse(
-        res,
-        200,
-        'Recipe Retrieved',
-        recipe
-      );
+      this.sendResponse(res, 200, 'Recipe Retrieved', recipe);
     });
   }
 
@@ -49,17 +43,10 @@ export default class RecipeController {
         throw boom.badRequest('Invalid size parameter');
       }
 
-      const parsedSize =
-        parseInt(size as string) || undefined;
-      const recipes =
-        await recipesService.getRecipes(parsedSize);
+      const parsedSize = parseInt(size as string) || undefined;
+      const recipes = await recipesService.getRecipes(parsedSize);
 
-      this.sendResponse(
-        res,
-        200,
-        'Recipes Retrieved',
-        recipes
-      );
+      this.sendResponse(res, 200, 'Recipes Retrieved', recipes);
     });
   }
 
@@ -67,8 +54,7 @@ export default class RecipeController {
     return tryCatch(async (req, res) => {
       const { body } = req;
 
-      const recipe =
-        await recipesService.createRecipe(body);
+      const recipe = await recipesService.createRecipe(body);
 
       this.sendResponse(res, 201, 'Recipe Created', recipe);
     });
@@ -79,15 +65,12 @@ export default class RecipeController {
       const { body } = req;
       const id = this.validateId(req.params.id);
 
-      const updatedRecipe =
-        await recipesService.updateRecipe(id, body);
-
-      this.sendResponse(
-        res,
-        200,
-        'Recipe updated',
-        updatedRecipe
+      const updatedRecipe = await recipesService.updateRecipe(
+        id,
+        body
       );
+
+      this.sendResponse(res, 200, 'Recipe updated', updatedRecipe);
     });
   }
 
@@ -96,15 +79,12 @@ export default class RecipeController {
       const id = this.validateId(req.params.id);
       const { body } = req;
 
-      const replacedRecipe =
-        await recipesService.replaceRecipe(id, body);
-
-      this.sendResponse(
-        res,
-        204,
-        'Recipe replaced',
-        replacedRecipe
+      const replacedRecipe = await recipesService.replaceRecipe(
+        id,
+        body
       );
+
+      this.sendResponse(res, 204, 'Recipe replaced', replacedRecipe);
     });
   }
 

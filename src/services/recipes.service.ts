@@ -1,17 +1,18 @@
 import { createRecipes } from '../data/recipesGenerator';
 import { RecipeData } from '../types/RecipeData';
-import pool from '../libs/postgresql';
+//import pool from '../libs/postgresql';
+import { sequelize } from '../libs/sequelize';
 import boom from '../../node_modules/@hapi/boom/lib/index';
 class RecipesService {
   private recipes: RecipeData[] = [];
-  private pool: any;
+  //private pool: any;
   constructor(recipes?: RecipeData[]) {
     this.recipes = recipes ?? [];
-    this.pool = pool;
+    /*this.pool = pool;
     this.pool.on('error', (err: Error) => {
       console.error('Unexpected error on idle client', err);
       process.exit(-1);
-    });
+    });*/
   }
 
   private async generate(amount = 100) {
@@ -32,12 +33,12 @@ class RecipesService {
     //await this.ensureInitialized();
 
     const query = 'SELECT * FROM recipes';
-    const recipes = await this.pool.query(query);
+    const [recipes] = await sequelize.query(query);
 
-    if (!limit || limit >= recipes.rows.length) {
-      return recipes.rows;
+    if (!limit || limit >= recipes.length) {
+      return recipes;
     }
-    return recipes.rows.slice(0, limit);
+    return recipes.slice(0, limit);
     //return this.recipes.slice(0, limit);
   }
 

@@ -1,15 +1,16 @@
 import pg from 'pg';
-const { Pool, Client } = pg;
+import { config } from '../config/config';
+const { Pool } = pg;
 
-export default async function getConnection() {
-  const client = new Client({
-    host: 'localhost',
-    port: 5432,
-    user: 'papita',
-    password: 'admin',
-    database: 'recipe_app'
-  });
+const USER = encodeURIComponent(config.dbUser);
+const PASSWORD = encodeURIComponent(config.dbPassword);
+const URI = `postgres://${USER}:${PASSWORD}@${config.dbHost}:${config.dbPort}/${config.dbName}`;
 
-  await client.connect();
-  return client;
-}
+const pool = new Pool({
+  connectionString: URI,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000
+});
+
+export default pool;

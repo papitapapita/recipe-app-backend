@@ -1,12 +1,17 @@
 import { createRecipes } from '../data/recipesGenerator';
 import { RecipeData } from '../types/RecipeData';
-import getConnection from '../libs/postgresql';
+import pool from '../libs/postgresql';
 import boom from '../../node_modules/@hapi/boom/lib/index';
 class RecipesService {
   private recipes: RecipeData[] = [];
-
+  private pool: any;
   constructor(recipes?: RecipeData[]) {
     this.recipes = recipes ?? [];
+    this.pool = pool;
+    this.pool.on('error', (err: Error) => {
+      console.error('Unexpected error on idle client', err);
+      process.exit(-1);
+    });
   }
 
   private async generate(amount = 100) {
@@ -26,9 +31,8 @@ class RecipesService {
   public async getRecipes(limit?: number) {
     //await this.ensureInitialized();
 
-    console.log('Hello there');
-    const client = await getConnection();
-    const recipes = await client.query('SELECT * FROM recipes');
+    const query = 'SELECT * FROM recipes';
+    const recipes = await this.pool.query(query);
 
     if (!limit || limit >= recipes.rows.length) {
       return recipes.rows;

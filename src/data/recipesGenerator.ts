@@ -6,9 +6,8 @@ import { createTags } from './tagsGenerator';
 import { Recipe } from '../models/Recipe';
 
 const createRecipes = objectGenerator<RecipeData>(
-  (index?) =>
+  () =>
     new Recipe({
-      id: index!,
       title: faker.food.dish(),
       description: faker.food.description(),
       imageUrl: faker.image.url(),

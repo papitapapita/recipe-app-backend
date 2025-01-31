@@ -1,4 +1,16 @@
+/*export {
+  ingredientSchema,
+  softIngredientsSchema,
+  recipeIngredientSchema
+} from './ingredient.schema';*/
+
 import Joi from 'joi';
+
+const id = Joi.number().positive().integer().messages({
+  'number.base': 'Recipe ID should be a type of number',
+  'number.positive': 'Recipe ID should be a positive number',
+  'number.integer': 'Recipe ID should be an integer'
+});
 
 // RECIPE PROPERTIES
 const title = Joi.string().min(3).max(100).messages({

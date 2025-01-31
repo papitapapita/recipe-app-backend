@@ -2,6 +2,7 @@ import express from 'express';
 import 'dotenv/config';
 import process from 'node:process';
 import routerApi from './routes/index.router';
+import 'reflect-metadata';
 
 const app = express();
 const { PORT } = process.env || 3000;

@@ -28,9 +28,11 @@ export class RecipeIngredient extends Model {
   @Column(DataType.INTEGER)
   ingredientId!: number;
 
+  @AllowNull(false)
   @Column(DataType.FLOAT)
   quantity!: number;
 
+  @AllowNull(false)
   @Column(DataType.STRING)
   measurement!: string;
 }

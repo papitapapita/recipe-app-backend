@@ -39,12 +39,14 @@ export default class RecipeController {
     return tryCatch(async (req, res) => {
       const { size } = req.query;
 
-      if (size && isNaN(parseInt(size as string))) {
-        throw boom.badRequest('Invalid size parameter');
+      let parsedSize: number | undefined;
+      if (size) {
+        parsedSize = parseInt(size as string);
+        if (!parsedSize || parsedSize <= 0) {
+          throw boom.badRequest('Invalid size parameter');
+        }
       }
-
-      const parsedSize = parseInt(size as string) || undefined;
-      const recipes = await recipesService.getRecipes(parsedSize);
+      const recipes = await recipesService.getAllRecipes(parsedSize);
 
       this.sendResponse(res, 200, 'Recipes Retrieved', recipes);
     });

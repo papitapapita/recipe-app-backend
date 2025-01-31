@@ -34,10 +34,11 @@ export class Instruction extends Model {
   @Column(DataType.INTEGER)
   step!: number;
 
-  @AllowNull(false)
+  @AllowNull(true)
   @Column(DataType.STRING)
-  title!: string;
+  title?: string;
 
+  @AllowNull(false)
   @Column(DataType.TEXT)
   description!: string;
 

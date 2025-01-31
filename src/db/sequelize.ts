@@ -7,7 +7,7 @@ import {
   RecipeIngredient,
   RecipeTag,
   Tag
-} from '../db/models';
+} from '../models';
 //import { seedDatabase } from '../db/seedDatabase';
 
 const USER = encodeURIComponent(config.dbUser);

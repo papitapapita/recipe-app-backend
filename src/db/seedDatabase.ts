@@ -7,7 +7,7 @@ import {
   RecipeIngredient,
   RecipeTag,
   Tag
-} from '../db/models';
+} from '../models';
 
 export async function seedDatabase(
   sequelize: Sequelize,

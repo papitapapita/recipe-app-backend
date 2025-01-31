@@ -1,41 +1,52 @@
-import { createRecipes } from '../data/recipesGenerator';
-import { RecipeData } from '../types/RecipeData';
-import { sequelize } from '../libs/sequelize';
-import { Recipe } from '../db/models/index';
 import boom from '../../node_modules/@hapi/boom/lib/index';
-class RecipesService {
-  private recipes: RecipeData[] = [];
-  constructor(recipes?: RecipeData[]) {
-    this.recipes = recipes ?? [];
+import Joi, { ObjectSchema } from 'joi';
+import { BaseService } from './base.service';
+import { Recipe } from '../models';
+import { Repository } from 'sequelize-typescript';
+import { FindOptions } from 'sequelize';
+import { recipeSchema } from '../utils/schemas/recipe.schema';
+import { recipeIngredientSchema } from '../utils/schemas/ingredient.schema';
+import { softRecipeSchema } from '../utils/schemas';
+import { instructionSchema } from '../utils/schemas/instruction.schema';
+
+export class RecipesService extends BaseService<Recipe> {
+  static readonly attributes = [
+    'id',
+    'title',
+    'description',
+    'preparingTime',
+    'cookingTime',
+    'imageUrl',
+    'calories',
+    'carbs',
+    'protein',
+    'fat',
+    'ingredients',
+    'tags'
+  ]; // Room to improve making an Object.keys()
+  constructor(recipeRepository: Repository<Recipe>) {
+    super(recipeRepository);
   }
 
-  public async getRecipes(limit?: number) {
-    const query = 'SELECT * FROM recipes';
-    //const recipes = await models.Recipe.findAll();
-    /*const [recipes]: [
-      recipes: Partial<RecipeData>[],
-      metadata: unknown
-    ] = await sequelize.query(query);*/
+  public async getAllRecipes(
+    limit?: number,
+    order?: [string, string]
+  ): Promise<Recipe[]> {
+    const options: FindOptions = {};
 
-    if (!limit || limit >= recipes.length) {
-      return recipes;
+    if (limit) {
+      options.limit = limit;
     }
-    return recipes.slice(0, limit);
-    //return this.recipes.slice(0, limit);
+
+    if (order) {
+      options.order = [order];
+    }
+
+    return await this.findAll(options);
   }
 
-  public async findRecipe(
-    id: number
-  ): Promise<RecipeData | undefined> {
-    return this.recipes.find((recipe) => recipe.id === id);
-  }
-
-  private async findRecipeIndex(id: number) {
-    return this.recipes.findIndex((recipe) => recipe.id === id);
-  }
-
-  public async getRecipe(id: number): Promise<RecipeData> {
-    const recipe = await this.findRecipe(id);
+  public async getRecipe(id: number): Promise<Recipe> {
+    const recipe = await this.findById(id);
 
     if (!recipe) {
       throw boom.notFound(`Recipe with ID ${id} not found`);
@@ -44,11 +55,63 @@ class RecipesService {
     return recipe;
   }
 
+  /*
+  I need to validate the info is right
+  1. Create the schemas with properties value types and constrains
+  2. Define what is the schema you need (What are the properties you need to check)
+  3. You need to check every property that it exists and it has the 
+  required type of data according to the database constrains
+
+
+  private validate(schma: ObjectSchema<T>)
+  */
+  private async validate(
+    recipe: Recipe | Partial<Recipe>,
+    schema: ObjectSchema
+  ) {
+    const { error, value } = schema.validate(recipe, {
+      abortEarly: false,
+      stripUnknown: true
+    });
+
+    if (error) {
+      throw boom.badRequest(
+        error.details.map((detail: any) => detail.message).join(',')
+      );
+    }
+
+    // Si hay un título a validar
+    if (recipe.title) {
+      const isUnique = await validateUniqueness(
+        recipe.title,
+        'title',
+        'recipe'
+      );
+      if (!isUnique) {
+        throw boom.badRequest(
+          'A recipe with this title already exists'
+        );
+      }
+    }
+
+    // Si hay ingredientes validar que los ingredientes no existan, o si no crearlos
+    if (recipe.ingredients) {
+      //const { ingredients } = recipe;
+      await ingredientService.validateIngredient(
+        recipe.ingredients,
+        instructionSchema
+      );
+    }
+
+    return value;
+  }
+
+  /*
   private validate(
-    recipe: Partial<RecipeData>,
+    recipe: Partial<Recipe>,
     isPartial = false
-  ): RecipeData | Partial<RecipeData> {
-    const requiredProperties = Object.keys(createRecipes(1)[0]);
+  ): Recipe | Partial<Recipe> {
+    const requiredProperties = Object.keys(Recipe.prototype);
 
     for (const key of Object.keys(recipe)) {
       if (!requiredProperties.includes(key)) {
@@ -65,61 +128,43 @@ class RecipesService {
     }
 
     return recipe;
-  }
+  }*/
 
   public async updateRecipe(
     id: number,
-    recipeUpdates: Partial<RecipeData>
+    recipeUpdates: Partial<Recipe>
   ) {
-    const recipeIndex = await this.findRecipeIndex(id);
-
-    if (recipeIndex === -1) {
-      throw boom.notFound(`Recipe with ID ${id} not found`);
-    }
-
     const validUpdates = this.validate(recipeUpdates, true);
 
-    const updatedRecipe = this.validate({
-      ...this.recipes[recipeIndex],
-      ...validUpdates,
-      updatedAt: new Date().toString()
-    });
+    const [affectedCount, updatedRecipe] = await this.update(
+      id,
+      validUpdates
+    );
 
-    const validatedRecipe = this.validate(
-      updatedRecipe
-    ) as RecipeData;
-
-    this.recipes[recipeIndex] = validatedRecipe;
-    return validatedRecipe;
-  }
-
-  public async replaceRecipe(
-    id: number,
-    recipe: Partial<RecipeData>
-  ) {
-    const recipeIndex = await this.findRecipeIndex(id);
-
-    if (recipeIndex === -1) {
+    if (affectedCount === 0) {
       throw boom.notFound(`Recipe with ID ${id} not found`);
     }
 
-    const validatedRecipe = {
-      ...this.validate(recipe),
-      updatedAt: new Date().toString()
-    };
-    this.recipes[recipeIndex] = validatedRecipe as RecipeData;
-
-    return validatedRecipe;
+    return updatedRecipe;
   }
 
-  public async createRecipe(recipe: RecipeData) {
-    const derivedRecipe = {
-      id: this.recipes.length,
-      ...recipe,
-      createdAt: new Date().toString(),
-      updatedAt: new Date().toString()
-    };
-    const createdRecipe = this.validate(derivedRecipe) as RecipeData;
+  public async replaceRecipe(id: number, recipe: Partial<Recipe>) {
+    const validUpdates = this.validate(recipe, false);
+
+    const [affectedCount, updatedRecipe] = await this.update(
+      id,
+      validUpdates
+    );
+
+    if (affectedCount === 0) {
+      throw boom.notFound(`Recipe with ID ${id} not found`);
+    }
+
+    return updatedRecipe;
+  }
+
+  public async createRecipe(recipe: Recipe) {
+    const createdRecipe = this.validate(recipe);
 
     this.recipes.push(createdRecipe);
     return createdRecipe;

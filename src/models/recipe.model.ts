@@ -6,7 +6,8 @@ import {
   Column,
   AllowNull,
   BelongsToMany,
-  DataType
+  DataType,
+  Unique
 } from 'sequelize-typescript';
 import { Ingredient } from './ingredient.model';
 import { RecipeIngredient } from './recipeIngredient.model';
@@ -24,6 +25,7 @@ class Recipe extends Model {
   @Column(DataType.INTEGER)
   id!: number;
 
+  @Unique
   @AllowNull(false)
   @Column(DataType.STRING)
   title!: string;
@@ -32,13 +34,13 @@ class Recipe extends Model {
   @Column(DataType.TEXT)
   description!: string;
 
-  @AllowNull(false)
+  @AllowNull(true)
   @Column(DataType.INTEGER)
-  preparingTime!: number;
+  preparingTime?: number;
 
   @AllowNull(true)
   @Column(DataType.INTEGER)
-  cookingTime!: number;
+  cookingTime?: number;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -46,19 +48,19 @@ class Recipe extends Model {
 
   @AllowNull(true)
   @Column({ type: DataType.FLOAT, validate: { min: 0 } })
-  calories!: number;
+  calories?: number;
 
   @AllowNull(true)
   @Column({ type: DataType.FLOAT, validate: { min: 0 } })
-  carbs!: number;
+  carbs?: number;
 
   @AllowNull(true)
   @Column({ type: DataType.FLOAT, validate: { min: 0 } })
-  protein!: number;
+  protein?: number;
 
   @AllowNull(true)
   @Column({ type: DataType.FLOAT, validate: { min: 0 } })
-  fat!: number;
+  fat?: number;
 
   @BelongsToMany(() => Ingredient, () => RecipeIngredient)
   ingredients!: Ingredient[];

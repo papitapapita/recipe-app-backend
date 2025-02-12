@@ -8,6 +8,7 @@ import { recipeSchema } from '../utils/schemas/recipe.schema';
 import { recipeIngredientSchema } from '../utils/schemas/ingredient.schema';
 import { softRecipeSchema } from '../utils/schemas';
 import { instructionSchema } from '../utils/schemas/instruction.schema';
+import { tagSchema } from '../utils/schemas/tag.schema';
 
 export class RecipesService extends BaseService<Recipe> {
   static readonly attributes = [
@@ -68,7 +69,7 @@ export class RecipesService extends BaseService<Recipe> {
   private async validate(
     recipe: Recipe | Partial<Recipe>,
     schema: ObjectSchema
-  ) {
+  ): Promise<Recipe | Partial<Recipe>> {
     const { error, value } = schema.validate(recipe, {
       abortEarly: false,
       stripUnknown: true
@@ -103,8 +104,21 @@ export class RecipesService extends BaseService<Recipe> {
       );
     }
 
+    if (recipe.instructions) {
+      await instructionService.validateInstruction(
+        recipe.instructions,
+        instructionSchema
+      );
+    }
+
+    if (recipe.tags) {
+      await tagService.validateTag(recipe.tags, tagSchema);
+    }
+
     return value;
   }
+
+  private async validateUniqueness(value, property, table) {}
 
   /*
   private validate(

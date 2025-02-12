@@ -7,12 +7,14 @@ import {
   AllowNull,
   BelongsToMany,
   DataType,
-  Unique
+  Unique,
+  HasMany
 } from 'sequelize-typescript';
 import { Ingredient } from './ingredient.model';
 import { RecipeIngredient } from './recipeIngredient.model';
 import { Tag } from './tag.model';
 import { RecipeTag } from './recipeTag.model';
+import { Instruction } from './instruction.model';
 
 @Table({
   tableName: 'recipes',
@@ -67,6 +69,9 @@ class Recipe extends Model {
 
   @BelongsToMany(() => Tag, () => RecipeTag)
   tags!: Tag[];
+
+  @HasMany(() => Instruction)
+  instructions!: Instruction[];
 }
 
 export { Recipe };

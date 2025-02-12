@@ -2,7 +2,7 @@ export default {
   preset: 'ts-jest',
   testEnvironment: 'node',
   verbose: true,
-  setupFilesAfterEnv: ['./jest.setup.ts'],
+  setupFilesAfterEnv: ['./tests/jest.setup.ts'],
   extensionsToTreatAsEsm: ['.ts'],
   globals: {
     'ts-jest': {

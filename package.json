@@ -8,7 +8,9 @@
     "start": "node dist/app.js",
     "dev": "tsx --watch src/app.ts",
     "ts": "npx tsc --watch",
-    "test": "jest"
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "test:verbose": "jest --verbose"
   },
   "keywords": [],
   "author": "Jonathan O",

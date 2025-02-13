@@ -16,7 +16,6 @@ describe('Recipe Model', () => {
 
   test('should create a recipe succesfully', async () => {
     const recipe = await Recipe.create(testRecipe);
-    console.log('Recipe created:', recipe.toJSON());
 
     expect(recipe.id).toBeDefined();
     expect(recipe.title).toBe(testRecipe.title);
@@ -28,13 +27,11 @@ describe('Recipe Model', () => {
 
   test('should autoincrement the id for every instance', async () => {
     const recipe1 = await Recipe.create(testRecipe);
-    console.log('Recipe 1 created:', recipe1.toJSON());
 
     const recipe2 = await Recipe.create({
       ...testRecipe,
       title: 'Another recipe'
     });
-    console.log('Recipe 2 created:', recipe2.toJSON());
 
     expect(recipe2.id).toBe(recipe1.id + 1);
   });

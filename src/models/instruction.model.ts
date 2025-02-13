@@ -42,7 +42,7 @@ export class Instruction extends Model {
   @Column(DataType.TEXT)
   description!: string;
 
-  static associate() {
+  /*static associate() {
     this.belongsTo(Recipe, { foreignKey: 'recipeId' });
     this.addHook(
       'beforeValidate',
@@ -78,5 +78,5 @@ export class Instruction extends Model {
         }
       }
     );
-  }
+  }*/
 }

@@ -4,9 +4,12 @@ export default {
   verbose: true,
   setupFilesAfterEnv: ['./tests/jest.setup.ts'],
   extensionsToTreatAsEsm: ['.ts'],
-  globals: {
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', { isolatedModules: true }]
+  }
+  /*globals: {
     'ts-jest': {
       useESM: true
     }
-  }
+  }*/
 };

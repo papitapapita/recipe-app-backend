@@ -1,31 +1,55 @@
-import {
-  Recipe
-  /*Ingredient,
-  Tag,
-  Instruction,
-  RecipeIngredient,
-  RecipeTag*/
-} from '../src/models';
-import { describe, test, expect } from '@jest/globals';
+import { Recipe } from '../src/models';
+import { describe, test, expect, beforeEach } from '@jest/globals';
+
+const testRecipe = {
+  title: 'Pasta',
+  description: 'A simple pasta recipe',
+  preparingTime: 15,
+  cookingTime: 10,
+  imageUrl: 'http://example.com/pasta.jpg'
+};
 
 describe('Recipe Model', () => {
-  test('should create a recipe succesfully', async () => {
-    const recipe = await Recipe.create({
-      title: 'Pasta',
-      description: 'A simple pasta recipe',
-      preparingTime: 15,
-      cookingTime: 10,
-      imageUrl: 'http://example.com/pasta.jpg'
-    });
-
-    expect(recipe.id).toBeDefined();
-    expect(recipe.title).toBe('Pasta');
+  beforeEach(async () => {
+    await Recipe.destroy({ where: {} });
   });
 
-  test('should enforce title as required', async () => {
+  test('should create a recipe succesfully', async () => {
+    const recipe = await Recipe.create(testRecipe);
+    console.log('Recipe created:', recipe.toJSON());
+
+    expect(recipe.id).toBeDefined();
+    expect(recipe.title).toBe(testRecipe.title);
+    expect(recipe.description).toBe(testRecipe.description);
+    expect(recipe.preparingTime).toBe(testRecipe.preparingTime);
+    expect(recipe.cookingTime).toBe(testRecipe.cookingTime);
+    expect(recipe.imageUrl).toBe(testRecipe.imageUrl);
+  });
+
+  test('should autoincrement the id for every instance', async () => {
+    const recipe1 = await Recipe.create(testRecipe);
+    console.log('Recipe 1 created:', recipe1.toJSON());
+
+    const recipe2 = await Recipe.create({
+      ...testRecipe,
+      title: 'Another recipe'
+    });
+    console.log('Recipe 2 created:', recipe2.toJSON());
+
+    expect(recipe2.id).toBe(recipe1.id + 1);
+  });
+
+  test('should not allow duplicate titles', async () => {
+    await expect(async () => {
+      await Recipe.create(testRecipe);
+      await Recipe.create(testRecipe);
+    }).rejects.toThrow();
+  });
+
+  test('should enforce title, description and imageUrl as required', async () => {
     await expect(
       Recipe.create({
-        description: 'Missing title'
+        preparingTime: 10
       })
     ).rejects.toThrow();
   });

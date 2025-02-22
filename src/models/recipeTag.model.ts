@@ -1,5 +1,4 @@
 import {
-  AutoIncrement,
   BelongsTo,
   Column,
   DataType,
@@ -13,11 +12,6 @@ import { Tag } from './tag.model';
 
 @Table({ tableName: 'recipes_tags' })
 export class RecipeTag extends Model {
-  /*@PrimaryKey
-  @AutoIncrement
-  @Column(DataType.INTEGER)
-  id!: number;*/
-
   @PrimaryKey
   @ForeignKey(() => Recipe)
   @Column(DataType.INTEGER)

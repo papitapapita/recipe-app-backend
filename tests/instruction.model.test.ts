@@ -23,6 +23,7 @@ const testRecipe = {
 };
 
 describe('Instruction Model', () => {
+  // A global recipe instance for all tests
   beforeAll(async () => {
     await Recipe.create(testRecipe);
   });
@@ -76,5 +77,39 @@ describe('Instruction Model', () => {
     );
 
     expect(deletedInstruction).toBeNull();
+  });
+
+  test('should not create an instruction of a non existing recipe', async () => {
+    await expect(
+      Instruction.create({ ...testInstruction, recipeId: 10 })
+    ).rejects.toThrow();
+  });
+
+  test('should delete instructions related to a recipe being deleted', async () => {
+    const recipe = await Recipe.create({
+      title: 'Cake',
+      description: 'Tasty cake',
+      imageUrl: 'cake.jpg'
+    });
+
+    await Instruction.create({
+      recipeId: recipe.id,
+      step: 1,
+      description: 'description 1'
+    });
+
+    await Instruction.create({
+      recipeId: recipe.id,
+      step: 2,
+      description: 'description 1'
+    });
+
+    await recipe.destroy();
+
+    const instructions = await Instruction.findAll({
+      where: { recipeId: recipe.id }
+    });
+
+    expect(instructions.length).toBe(0);
   });
 });

@@ -27,7 +27,7 @@ export class Instruction extends Model {
   @Column(DataType.INTEGER)
   recipeId!: number;
 
-  @BelongsTo(() => Recipe)
+  @BelongsTo(() => Recipe, { onDelete: 'CASCADE' })
   recipe!: Recipe;
 
   @AllowNull(false)

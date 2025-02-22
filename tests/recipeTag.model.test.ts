@@ -1,10 +1,4 @@
-import { afterEach } from 'node:test';
-import {
-  RecipeTag,
-  Recipe,
-  Tag,
-  RecipeIngredient
-} from '../src/models';
+import { RecipeTag, Recipe, Tag } from '../src/models';
 import { beforeEach, describe, expect, test } from '@jest/globals';
 
 const testRecipes = [

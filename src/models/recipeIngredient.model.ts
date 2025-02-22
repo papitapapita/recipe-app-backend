@@ -1,6 +1,7 @@
 import {
   AllowNull,
   AutoIncrement,
+  BelongsTo,
   Column,
   DataType,
   ForeignKey,
@@ -35,4 +36,10 @@ export class RecipeIngredient extends Model {
   @AllowNull(false)
   @Column(DataType.STRING)
   measurement!: string;
+
+  @BelongsTo(() => Recipe, { onDelete: 'CASCADE' })
+  recipe!: Recipe;
+
+  @BelongsTo(() => Ingredient, { onDelete: 'CASCADE' })
+  ingredient!: Ingredient;
 }

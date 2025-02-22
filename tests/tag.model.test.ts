@@ -10,7 +10,7 @@ describe('Tag Model', () => {
     await Tag.destroy({ where: {} });
   });
 
-  test('should create a tag succesfully', async () => {
+  test('should create a tag with its properties defined', async () => {
     const tag = await Tag.create(testTag);
 
     expect(tag.id).toBeDefined();

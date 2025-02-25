@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-const ingredientName = Joi.string()
+const name = Joi.string()
   .messages({
     'string.base': 'Ingredient name should be a type of text'
   })
@@ -14,17 +14,17 @@ const measurement = Joi.string().messages({
 });
 
 const ingredientSchema = Joi.object({
-  ingredientName: ingredientName.required()
+  name: name.required()
 });
 
 const recipeIngredientSchema = Joi.object({
-  ingredientName: ingredientName.required(),
+  name: name.required(),
   quantity: quantity.required(),
   measurement: measurement.required()
 });
 
 const softIngredientsSchema = Joi.object({
-  ingredientName: ingredientName.optional(),
+  name: name.optional(),
   quantity: quantity.optional(),
   measurement: measurement.optional()
 });

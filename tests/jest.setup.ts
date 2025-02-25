@@ -8,9 +8,10 @@ import {
   Instruction,
   RecipeTag
 } from '../src/models';
+import { RecipesService } from '../src/services/recipes.service';
 
 let sequelize: Sequelize;
-
+let recipesService: RecipesService;
 beforeAll(async () => {
   sequelize = new Sequelize({
     dialect: 'sqlite',
@@ -27,10 +28,12 @@ beforeAll(async () => {
   });
 
   await sequelize.sync({ force: true });
+
+  recipesService = new RecipesService(sequelize, Recipe);
 });
 
 afterAll(async () => {
   await sequelize.close();
 });
 
-export { sequelize };
+export { sequelize, recipesService };

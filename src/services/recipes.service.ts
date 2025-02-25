@@ -1,32 +1,24 @@
-import boom from '../../node_modules/@hapi/boom/lib/index';
-import Joi, { ObjectSchema } from 'joi';
 import { BaseService } from './base.service';
-import { Recipe } from '../models';
+import boom from '@hapi/boom';
+import {
+  Ingredient,
+  Instruction,
+  Recipe,
+  RecipeIngredient,
+  Tag
+} from '../models';
 import { Repository } from 'sequelize-typescript';
-import { FindOptions } from 'sequelize';
+import { FindOptions, Sequelize } from 'sequelize';
 import { recipeSchema } from '../utils/schemas/recipe.schema';
-import { recipeIngredientSchema } from '../utils/schemas/ingredient.schema';
-import { softRecipeSchema } from '../utils/schemas';
-import { instructionSchema } from '../utils/schemas/instruction.schema';
-import { tagSchema } from '../utils/schemas/tag.schema';
+import { RecipeInput } from '../types/Recipe';
 
 export class RecipesService extends BaseService<Recipe> {
-  /* static readonly attributes = [
-    'id',
-    'title',
-    'description',
-    'preparingTime',
-    'cookingTime',
-    'imageUrl',
-    'calories',
-    'carbs',
-    'protein',
-    'fat',
-    'ingredients',
-    'tags'
-  ]; // Room to improve making an Object.keys()*/
-  constructor(recipeRepository: Repository<Recipe>) {
+  constructor(
+    private sequelize: Sequelize,
+    private recipeRepository: Repository<Recipe>
+  ) {
     super(recipeRepository);
+    this.sequelize = sequelize;
   }
 
   public async getAllRecipes(options?: {
@@ -56,100 +48,98 @@ export class RecipesService extends BaseService<Recipe> {
     return recipe;
   }
 
-  /*
-  I need to validate the info is right
-  1. Create the schemas with properties value types and constrains
-  2. Define what is the schema you need (What are the properties you need to check)
-  3. You need to check every property that it exists and it has the 
-  required type of data according to the database constrains
-
-
-  private validate(schma: ObjectSchema<T>)
-  */
-  /*
-  private async validate(
-    recipe: Recipe | Partial<Recipe>,
-    schema: ObjectSchema
-  ): Promise<Recipe | Partial<Recipe>> {
-    const { error, value } = schema.validate(recipe, {
-      abortEarly: false,
-      stripUnknown: true
-    });
-
+  private async validateRecipeData(recipeData: RecipeInput) {
+    const { error } = recipeSchema.validate(recipeData);
     if (error) {
       throw boom.badRequest(
-        error.details.map((detail: any) => detail.message).join(',')
+        'Validation failed',
+        error.details.map((d) => d.message)
       );
     }
 
-    // Si hay un título a validar
-    if (recipe.title) {
-      const isUnique = await validateUniqueness(
-        recipe.title,
-        'title',
-        'recipe'
-      );
-      if (!isUnique) {
-        throw boom.badRequest(
-          'A recipe with this title already exists'
-        );
-      }
-    }
+    const existingRecipe = await this.recipeRepository.findOne({
+      where: { title: recipeData.title }
+    });
 
-    // Si hay ingredientes validar que los ingredientes no existan, o si no crearlos
-    if (recipe.ingredients) {
-      //const { ingredients } = recipe;
-      await ingredientService.validateIngredient(
-        recipe.ingredients,
-        instructionSchema
-      );
+    if (existingRecipe) {
+      throw boom.badData('This recipe title already exists');
     }
-
-    if (recipe.instructions) {
-      await instructionService.validateInstruction(
-        recipe.instructions,
-        instructionSchema
-      );
-    }
-
-    if (recipe.tags) {
-      await tagService.validateTag(recipe.tags, tagSchema);
-    }
-
-    return value;
   }
 
-  private async validateUniqueness(value, property, table) {}
+  private async filterRecipeData(recipeData: RecipeInput) {
+    await this.validateRecipeData(recipeData);
 
-  /*
-  private validate(
-    recipe: Partial<Recipe>,
-    isPartial = false
-  ): Recipe | Partial<Recipe> {
-    const requiredProperties = Object.keys(Recipe.prototype);
+    const {
+      instructions,
+      ingredients,
+      tags = [],
+      ...recipe
+    } = recipeData;
 
-    for (const key of Object.keys(recipe)) {
-      if (!requiredProperties.includes(key)) {
-        throw boom.badData(`Invalid property: ${key}`);
+    return { recipe, instructions, ingredients, tags };
+  }
+
+  public async createRecipe(recipeData: RecipeInput) {
+    const data = await this.filterRecipeData(recipeData);
+    const transaction = await this.sequelize.transaction();
+
+    try {
+      const recipe = await this.recipeRepository.create(data.recipe, {
+        transaction
+      });
+
+      for (let ingredient of data.ingredients) {
+        const { measurement, quantity, ...filteredIngredient } =
+          ingredient;
+
+        const [createdIngredient] = await Ingredient.findOrCreate({
+          where: { name: ingredient.name },
+          defaults: filteredIngredient,
+          transaction
+        });
+
+        await RecipeIngredient.create({
+          recipeId: recipe.id,
+          ingredientId: createdIngredient.id,
+          quantity,
+          measurement
+        });
       }
-    }
 
-    if (!isPartial) {
-      for (const prop of requiredProperties) {
-        if (!(prop in recipe)) {
-          throw boom.expectationFailed(`Missing property: ${prop}`);
+      let currentStep = 1;
+      for (let instruction of data.instructions) {
+        await Instruction.create(
+          {
+            ...instruction,
+            recipeId: recipe.id,
+            step: currentStep++
+          },
+          { transaction }
+        );
+      }
+
+      if (data.tags) {
+        const tags: Tag[] = [];
+
+        for (let tag of data.tags) {
+          const createdTag = await Tag.findOrCreate({
+            where: { name: tag.name },
+            defaults: tag,
+            transaction
+          });
+          tags.push(createdTag[0]);
         }
+
+        recipe.$add('tags', tags);
       }
+
+      await transaction.commit();
+
+      return recipe;
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
     }
-
-    return recipe;
-  }*/
-
-  public async createRecipe(recipe: Recipe) {
-    const createdRecipe = this.validate(recipe);
-
-    this.recipes.push(createdRecipe);
-    return createdRecipe;
   }
   /*
   public async updateRecipe(
@@ -222,4 +212,4 @@ console.log('---------- DELETE ------------');
 console.log(await recipesService.deleteRecipe(2));
 console.error(await recipesService.getRecipe(2));
  */
-export { recipesService };
+//export { recipesService };

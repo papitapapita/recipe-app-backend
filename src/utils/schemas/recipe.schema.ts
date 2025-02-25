@@ -1,4 +1,9 @@
 import Joi from 'joi';
+import {
+  instructionSchema,
+  tagSchema,
+  recipeIngredientSchema
+} from '.';
 
 const title = Joi.string().min(3).max(100).messages({
   'string.base': 'Title should be a type of text',
@@ -26,55 +31,66 @@ const cookingTime = Joi.number().positive().integer().messages({
   'number.positive': 'Cooking time should be a positive number',
   'number.integer': 'Cooking time should be an integer'
 });
-const calories = Joi.number().positive().messages({
+const calories = Joi.number().min(0).messages({
   'number.base': 'Calories should be a type of number',
   'number.positive': 'Calories should be a positive number'
 });
-const carbs = Joi.number().positive().messages({
+const carbs = Joi.number().min(0).messages({
   'number.base': 'Carbs should be a type of number',
   'number.positive': 'Carbs should be a positive number'
 });
-const protein = Joi.number().positive().messages({
+const protein = Joi.number().min(0).messages({
   'number.base': 'Protein should be a type of number',
   'number.positive': 'Protein should be a positive number'
 });
-const fat = Joi.number().positive().messages({
+const fat = Joi.number().min(0).messages({
   'number.base': 'Fat should be a type of number',
   'number.positive': 'Fat should be a positive number'
 });
-const instructions = Joi.array().min(1).messages({
-  'array.min': 'Instructions should have at least {#limit} items'
-});
-const tags = Joi.array().min(1).messages({
+const instructions = Joi.array()
+  .items(instructionSchema)
+  .min(1)
+  .messages({
+    'array.min': 'Instructions should have at least {#limit} items'
+  });
+const tags = Joi.array().items(tagSchema).messages({
   'array.min': 'Tags should have at least {#limit} items'
 });
+const ingredients = Joi.array()
+  .items(recipeIngredientSchema)
+  .min(1)
+  .messages({
+    'array.min': 'Tags should have at least {#limit} items'
+  });
 
 const recipeSchema = Joi.object({
   title: title.required(),
   description: description.required(),
   imageUrl: imageUrl.required(),
-  preparingTime: preparingTime,
-  cookingTime: cookingTime,
-  calories: calories,
-  carbs: carbs,
-  protein: protein,
-  fat: fat,
+  preparingTime,
+  cookingTime,
+  calories,
+  carbs,
+  protein,
+  fat,
   instructions: instructions.required(),
-  tags: tags
+  ingredients: ingredients.required(),
+  tags
 });
 
 const softRecipeSchema = Joi.object({
-  title: title,
-  description: description,
-  imageUrl: imageUrl,
-  preparingTime: preparingTime,
-  cookingTime: cookingTime,
-  calories: calories,
-  carbs: carbs,
-  protein: protein,
-  fat: fat,
-  instructions: instructions,
-  tags: tags
+  title,
+  description,
+  imageUrl,
+  preparingTime,
+  cookingTime,
+  calories,
+  carbs,
+  protein,
+  fat,
+  instructions,
+  ingredients,
+  tags
 });
 
 export { recipeSchema, softRecipeSchema };

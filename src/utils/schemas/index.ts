@@ -1,9 +1,16 @@
-/*export {
+export {
   ingredientSchema,
-  softIngredientsSchema,
-  recipeIngredientSchema
-} from './ingredient.schema';*/
+  recipeIngredientSchema,
+  softIngredientsSchema
+} from './ingredient.schema';
+export {
+  instructionSchema,
+  softInstructionSchema
+} from './instruction.schema';
+export { tagSchema, softTagSchema } from './tag.schema';
+export { recipeSchema, softRecipeSchema } from './recipe.schema';
 
+/*
 import Joi from 'joi';
 
 const id = Joi.number().positive().integer().messages({
@@ -112,6 +119,7 @@ const tagName = Joi.string().messages({
  * Fields:
  * - `id` (required): A positive integer representing the ID.
  */
+/*
 const idSchema = Joi.object({
   id: Joi.number().integer().required().messages({
     'number.base': 'ID should be a type of number',
@@ -198,3 +206,4 @@ export {
   tagSchema,
   softTagSchema
 };
+*/

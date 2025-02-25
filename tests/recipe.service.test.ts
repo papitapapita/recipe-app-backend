@@ -1,11 +1,6 @@
-import {
-  beforeAll,
-  describe,
-  test,
-  beforeEach,
-  expect
-} from '@jest/globals';
-import { RecipesService } from '../src/services/recipes.service';
+import { RecipeInput } from '../src/types/Recipe';
+import { beforeAll, describe, test, expect } from '@jest/globals';
+import { sequelize, recipesService } from './jest.setup';
 import {
   Ingredient,
   Recipe,
@@ -23,11 +18,9 @@ import {
   createRecipeTag
 } from '../src/data/';
 
-const recipesService = new RecipesService(Recipe);
-const testingValues = 3;
-
 describe('Recipe Service Layer', () => {
   beforeAll(async () => {
+    const testingValues = 3;
     try {
       await Recipe.bulkCreate(createRecipes(testingValues) as any[]);
       await Ingredient.bulkCreate(
@@ -70,8 +63,6 @@ describe('Recipe Service Layer', () => {
         order: [['id', 'DESC']]
       });
 
-      console.log(recipes);
-
       expect(recipes[0].id).toBe(3);
     } catch (error) {
       console.error(error);
@@ -87,5 +78,56 @@ describe('Recipe Service Layer', () => {
 
   test('should throw an error when no recipe', async () => {
     expect(recipesService.getRecipe(10)).rejects.toThrow();
+  });
+
+  test('should create a new recipe with ingredients, instructions and tags', async () => {
+    try {
+      const recipeData: RecipeInput = {
+        title: 'Test Recipe',
+        description: 'A delicious test recipe',
+        imageUrl: 'https://example.com/image.jpg',
+        preparingTime: 10,
+        cookingTime: 20,
+        calories: 300,
+        carbs: 50,
+        protein: 10,
+        fat: 5,
+        ingredients: [
+          { name: 'Flour', measurement: 'cups', quantity: 2 },
+          { name: 'Sugar', measurement: 'tbsp', quantity: 1 }
+        ],
+        instructions: [
+          { title: 'Step 1', description: 'Mix ingredients' },
+          { title: 'Step 2', description: 'Bake in oven' }
+        ],
+        tags: [{ name: 'Dessert' }]
+      };
+
+      const recipe = await recipesService.createRecipe(recipeData);
+
+      expect(recipe).toBeDefined();
+      expect(recipe.title).toBe(recipeData.title);
+
+      const ingredients = await recipe.$get('ingredients');
+      expect(ingredients.length).toBe(2);
+      expect(ingredients[0].name).toBe(
+        recipeData.ingredients[0].name
+      );
+      expect(ingredients[1].name).toBe(
+        recipeData.ingredients[1].name
+      );
+
+      const instructions = await Instruction.findAll({
+        where: { recipeId: recipe.id }
+      });
+      expect(instructions.length).toBe(2);
+
+      const tags = await recipe.$get('tags');
+      expect(tags.length).toBe(1);
+      expect(tags[0].name).toBe('Dessert');
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   });
 });

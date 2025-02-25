@@ -1,15 +1,15 @@
 import Joi from 'joi';
 
-const tagName = Joi.string().messages({
+const name = Joi.string().messages({
   'string.base': 'Tag name should be a type of text'
 });
 
 const tagSchema = Joi.object({
-  tagName: tagName.required()
+  name: name.required()
 });
 
 const softTagSchema = Joi.object({
-  tagName: tagName
+  name: name
 });
 
 export { tagSchema, softTagSchema };

@@ -20,8 +20,8 @@ const description = Joi.string().messages({
 });
 
 const instructionSchema = Joi.object({
-  recipeId: recipeId.required(),
-  step: step.required(),
+  recipeId: recipeId,
+  step: step,
   title: title.required(),
   description: description.required()
 });

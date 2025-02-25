@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { objectGenerator } from './objectGenerator';
-import { RecipeDTO } from '../types/RecipeDTO';
+import { RecipeDTO } from '../types/Recipe';
 
 const createRecipes = objectGenerator<RecipeDTO>(() => ({
   title: faker.food.dish() + faker.string.alphanumeric(2),

@@ -130,4 +130,25 @@ describe('Recipe Service Layer', () => {
       throw error;
     }
   });
+
+  test('should rollback transaction if ingredient creation fails', async () => {
+    const recipeData = {
+      title: 'Test Recipe with Invalid Ingredient',
+      description: 'This should fail',
+      imageUrl: 'https://example.com/image.jpg',
+      ingredients: [{ name: null, measurement: 'cups', quantity: 2 }], // Invalid ingredient
+      instructions: [],
+      tags: []
+    } as unknown as RecipeInput;
+
+    await expect(
+      recipesService.createRecipe(recipeData)
+    ).rejects.toThrow();
+
+    const recipes = await Recipe.findAll({
+      where: { title: recipeData.title }
+    });
+
+    expect(recipes.length).toBe(0);
+  });
 });

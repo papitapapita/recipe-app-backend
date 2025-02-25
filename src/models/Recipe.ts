@@ -1,4 +1,4 @@
-import { RecipeData } from '../types/RecipeData';
+import { RecipeDTO } from '../types/RecipeDTO';
 import { InstructionDTO } from '../types/Instruction';
 import { Tag } from '../types/Tag';
 export class Recipe implements RecipeData {

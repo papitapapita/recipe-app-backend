@@ -6,7 +6,4 @@ export interface Instruction {
   description: string;
 }
 
-export type InstructionDTO = Omit<
-  Instruction,
-  'instructionId' | 'recipeId'
->;
+export type InstructionDTO = Omit<Instruction, 'instructionId'>;

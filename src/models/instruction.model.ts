@@ -41,42 +41,4 @@ export class Instruction extends Model {
   @AllowNull(false)
   @Column(DataType.TEXT)
   description!: string;
-
-  /*static associate() {
-    this.belongsTo(Recipe, { foreignKey: 'recipeId' });
-    this.addHook(
-      'beforeValidate',
-      async (instruction: Instruction) => {
-        const existingInstruction = await Instruction.findOne({
-          where: {
-            recipeId: instruction.recipeId,
-            step: instruction.step
-          }
-        });
-
-        if (existingInstruction) {
-          throw new Error(
-            `Step ${instruction.step} already exists for this recipe.`
-          );
-        }
-      }
-    );
-  }
-
-  static addHooks() {
-    Instruction.addHook(
-      'beforeCreate',
-      async (instruction: Instruction) => {
-        const lastStep: number = await Instruction.max('step', {
-          where: { recipeId: instruction.recipeId }
-        });
-
-        if (lastStep && instruction.step !== lastStep + 1) {
-          throw new Error(
-            `Step number must be sequential. Expected step ${lastStep + 1}.`
-          );
-        }
-      }
-    );
-  }*/
 }

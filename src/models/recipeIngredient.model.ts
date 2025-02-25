@@ -12,7 +12,10 @@ import {
 import { Recipe } from './recipe.model';
 import { Ingredient } from './ingredient.model';
 
-@Table({ tableName: 'recipes_ingredients' })
+@Table({
+  tableName: 'recipes_ingredients',
+  indexes: [{ fields: ['recipeId', 'ingredientId'], unique: true }]
+})
 export class RecipeIngredient extends Model {
   @PrimaryKey
   @AutoIncrement

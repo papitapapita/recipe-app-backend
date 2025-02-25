@@ -11,7 +11,7 @@ import { instructionSchema } from '../utils/schemas/instruction.schema';
 import { tagSchema } from '../utils/schemas/tag.schema';
 
 export class RecipesService extends BaseService<Recipe> {
-  static readonly attributes = [
+  /* static readonly attributes = [
     'id',
     'title',
     'description',
@@ -24,23 +24,23 @@ export class RecipesService extends BaseService<Recipe> {
     'fat',
     'ingredients',
     'tags'
-  ]; // Room to improve making an Object.keys()
+  ]; // Room to improve making an Object.keys()*/
   constructor(recipeRepository: Repository<Recipe>) {
     super(recipeRepository);
   }
 
-  public async getAllRecipes(
-    limit?: number,
-    order?: [string, string]
-  ): Promise<Recipe[]> {
-    const options: FindOptions = {};
+  public async getAllRecipes(options?: {
+    limit?: number;
+    order?: [string, 'ASC' | 'DESC'][];
+  }): Promise<Recipe[]> {
+    const findOptions: FindOptions = {};
 
-    if (limit) {
-      options.limit = limit;
+    if (options?.limit) {
+      findOptions.limit = options.limit;
     }
 
-    if (order) {
-      options.order = [order];
+    if (options?.order) {
+      findOptions.order = options.order;
     }
 
     return await this.findAll(options);
@@ -66,6 +66,7 @@ export class RecipesService extends BaseService<Recipe> {
 
   private validate(schma: ObjectSchema<T>)
   */
+  /*
   private async validate(
     recipe: Recipe | Partial<Recipe>,
     schema: ObjectSchema
@@ -144,6 +145,13 @@ export class RecipesService extends BaseService<Recipe> {
     return recipe;
   }*/
 
+  public async createRecipe(recipe: Recipe) {
+    const createdRecipe = this.validate(recipe);
+
+    this.recipes.push(createdRecipe);
+    return createdRecipe;
+  }
+  /*
   public async updateRecipe(
     id: number,
     recipeUpdates: Partial<Recipe>
@@ -162,6 +170,7 @@ export class RecipesService extends BaseService<Recipe> {
     return updatedRecipe;
   }
 
+  /*
   public async replaceRecipe(id: number, recipe: Partial<Recipe>) {
     const validUpdates = this.validate(recipe, false);
 
@@ -177,13 +186,6 @@ export class RecipesService extends BaseService<Recipe> {
     return updatedRecipe;
   }
 
-  public async createRecipe(recipe: Recipe) {
-    const createdRecipe = this.validate(recipe);
-
-    this.recipes.push(createdRecipe);
-    return createdRecipe;
-  }
-
   public async deleteRecipe(id: number) {
     const recipeIndex = await this.findRecipeIndex(id);
 
@@ -192,11 +194,11 @@ export class RecipesService extends BaseService<Recipe> {
     }
 
     this.recipes = this.recipes.filter((recipe) => recipe.id !== id);
-  }
+  }*/
 }
 
-const recipesService = new RecipesService();
 /*
+const recipesService = new RecipesService();
 recipesService.initialize();
 console.log('------------ GET ------------');
 console.log(await recipesService.getRecipes(2));

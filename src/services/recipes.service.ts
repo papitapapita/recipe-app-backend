@@ -346,41 +346,32 @@ export class RecipesService extends BaseService<Recipe> {
       throw error;
     }
   }
-  /*
-  public async deleteRecipe(id: number) {
-    const recipeIndex = await this.findRecipeIndex(id);
 
-    if (recipeIndex === -1) {
-      throw boom.notFound(`Recipe with ID ${id} not found`);
+  public async deleteRecipe(recipeId: number) {
+    const transaction = await this.sequelize.transaction();
+
+    try {
+      const recipe = await this.recipeRepository.findByPk(recipeId, {
+        transaction
+      });
+      if (!recipe) {
+        throw boom.notFound('Recipe not found');
+      }
+
+      await RecipeIngredient.destroy({
+        where: { recipeId },
+        transaction
+      });
+      await Instruction.destroy({ where: { recipeId }, transaction });
+      await recipe.$set('tags', []);
+
+      await recipe.destroy({ transaction });
+
+      await transaction.commit();
+      return { message: 'Recipe deleted successfully' };
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
     }
-
-    this.recipes = this.recipes.filter((recipe) => recipe.id !== id);
-  }*/
+  }
 }
-
-/*
-const recipesService = new RecipesService();
-recipesService.initialize();
-console.log('------------ GET ------------');
-console.log(await recipesService.getRecipes(2));
-/*console.log('------------ FIND ------------');
-console.log(await recipesService.findRecipe(2));
-console.log('------------ CREATE -----------');
-console.log(await recipesService.createRecipe(createRecipes(1)[0]));
-console.log('--------- UPDATE -----------');
-console.log(
-  await recipesService.updateRecipe(1, {
-    title: 'New Title'
-  })
-);
-console.log(await recipesService.getRecipe(1));
-console.log('---------- REPLACE ------------');
-console.log(await recipesService.getRecipes(2));
-console.log(
-  await recipesService.replaceRecipe(1, createRecipes(1)[0])
-);
-console.log('---------- DELETE ------------');
-console.log(await recipesService.deleteRecipe(2));
-console.error(await recipesService.getRecipe(2));
- */
-//export { recipesService };

@@ -305,4 +305,29 @@ describe('Recipe Service Layer', () => {
       throw error;
     }
   });
+
+  test('should delete a recipe succesfully', async () => {
+    await recipesService.deleteRecipe(1);
+
+    const recipe = await Recipe.findByPk(1);
+    const instructions = await Instruction.findAll({
+      where: { recipeId: 1 }
+    });
+    const ingredients = await RecipeIngredient.findAll({
+      where: { recipeId: 1 }
+    });
+    const tags = await RecipeTag.findAll({
+      where: { recipeId: 1 }
+    });
+    expect(recipe).toBeNull();
+    expect(instructions.length).toBe(0);
+    expect(ingredients.length).toBe(0);
+    expect(tags.length).toBe(0);
+  });
+
+  test('should throw a not found error if the recipe does not exist', async () => {
+    await expect(recipesService.deleteRecipe(999)).rejects.toThrow(
+      boom.notFound('Recipe not found')
+    );
+  });
 });

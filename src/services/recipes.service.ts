@@ -181,8 +181,6 @@ export class RecipesService extends BaseService<Recipe> {
 
       await recipe.update(recipeData, { transaction });
 
-      console.log(recipe);
-
       const newIngredientsIds: number[] = [];
       for (const ingredient of ingredients) {
         const { measurement, quantity, ...filteredIngredient } =
@@ -279,8 +277,8 @@ export class RecipesService extends BaseService<Recipe> {
           cookingTime: null,
           calories: null,
           carbs: null,
-          proteins: null,
-          fats: null,
+          protein: null,
+          fat: null,
           ...recipeUpdates
         },
         { transaction }

@@ -2,7 +2,6 @@ import { RecipeInput } from '../src/types/Recipe';
 import {
   beforeAll,
   describe,
-  beforeEach,
   test,
   expect,
   jest
@@ -24,6 +23,7 @@ import {
   createRecipeIngredient,
   createRecipeTag
 } from '../src/data/';
+import boom from '@hapi/boom';
 
 describe('Recipe Service Layer', () => {
   beforeAll(async () => {
@@ -179,8 +179,6 @@ describe('Recipe Service Layer', () => {
         updatedData
       );
 
-      console.log(recipe);
-
       expect(recipe?.title).toBe('Updated Recipe');
       expect(recipe?.description).toBe('Updated Description');
 
@@ -225,19 +223,83 @@ describe('Recipe Service Layer', () => {
         where: { recipeId: updatedRecipe.id }
       });
       expect(ingredients.length).toBe(1);
-      expect(ingredients[0].quantity).toBe(2);
+      expect(ingredients[0].quantity).toBe(
+        newRecipeData.ingredients[0].quantity
+      );
 
       // Verify instructions were replaced
       const instructions = await Instruction.findAll({
         where: { recipeId: updatedRecipe.id }
       });
       expect(instructions.length).toBe(1);
-      expect(instructions[0].description).toBe('New step');
+      expect(instructions[0].description).toBe(
+        newRecipeData.instructions[0].description
+      );
 
       // Verify tags were replaced
       const recipeTags = await updatedRecipe.$get('tags');
       expect(recipeTags.length).toBe(1);
-      expect(recipeTags[0].name).toBe('Sweet');
+      expect(recipeTags[0].name).toBe(newRecipeData.tags[0].name);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  });
+
+  test('should throw error when recipe does not exist', async () => {
+    await expect(
+      recipesService.replaceRecipe(999, {
+        title: 'New Recipe',
+        description: 'New desc',
+        imageUrl: 'https://example.com/image.jpg',
+        ingredients: [
+          { name: 'Pepper', quantity: 2, measurement: 'tsp' }
+        ],
+        instructions: [
+          { title: 'Step 1', description: 'Do something' }
+        ],
+        tags: [{ name: 'Sweet' }]
+      })
+    ).rejects.toThrow(boom.notFound('Recipe not found'));
+  });
+
+  test('should rollback transaction on error', async () => {
+    try {
+      const recipe = await Recipe.create({
+        title: 'New Recipe 3',
+        description: 'New desc',
+        imageUrl: 'https://example.com/image.jpg',
+        ingredients: [
+          { name: 'Pepper 3', quantity: 2, measurement: 'tsp' }
+        ],
+        instructions: [
+          { title: 'Step 3', description: 'Do something' }
+        ],
+        tags: [{ name: 'Sweet' }]
+      });
+
+      jest
+        .spyOn(Recipe.prototype, 'update')
+        .mockRejectedValueOnce(new Error('Update failed'));
+
+      await expect(
+        recipesService.replaceRecipe(recipe.id, {
+          title: 'New Recipe 2',
+          description: 'New desc',
+          imageUrl: 'https://example.com/image.jpg',
+          ingredients: [
+            { name: 'Pepper 2', quantity: 2, measurement: 'tsp' }
+          ],
+          instructions: [
+            { title: 'Step 1', description: 'Do something' }
+          ],
+          tags: [{ name: 'Sweet 2' }]
+        })
+      ).rejects.toThrow('Update failed');
+
+      // Ensure the recipe was not changed
+      const unchangedRecipe = await Recipe.findByPk(recipe.id);
+      expect(unchangedRecipe?.title).toBe('New Recipe 3');
     } catch (error) {
       console.error(error);
       throw error;

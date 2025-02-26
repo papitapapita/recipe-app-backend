@@ -193,4 +193,54 @@ describe('Recipe Service Layer', () => {
       throw error;
     }
   });
+
+  test('should replace a recipe succesfully', async () => {
+    try {
+      const newRecipeData = {
+        title: 'New Recipe',
+        description: 'New desc',
+        imageUrl: 'https://example.com/image.jpg',
+        ingredients: [
+          { name: 'Pepper', quantity: 2, measurement: 'tsp' }
+        ],
+        instructions: [
+          { title: 'Step 1', description: 'Do something' }
+        ],
+        tags: [{ name: 'Sweet' }]
+      };
+
+      const updatedRecipe = await recipesService.replaceRecipe(
+        2,
+        newRecipeData
+      );
+
+      console.log(updatedRecipe);
+
+      expect(updatedRecipe.title).toBe(newRecipeData.title);
+      expect(updatedRecipe.description).toBe(
+        newRecipeData.description
+      );
+
+      const ingredients = await RecipeIngredient.findAll({
+        where: { recipeId: updatedRecipe.id }
+      });
+      expect(ingredients.length).toBe(1);
+      expect(ingredients[0].quantity).toBe(2);
+
+      // Verify instructions were replaced
+      const instructions = await Instruction.findAll({
+        where: { recipeId: updatedRecipe.id }
+      });
+      expect(instructions.length).toBe(1);
+      expect(instructions[0].description).toBe('New step');
+
+      // Verify tags were replaced
+      const recipeTags = await updatedRecipe.$get('tags');
+      expect(recipeTags.length).toBe(1);
+      expect(recipeTags[0].name).toBe('Sweet');
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  });
 });

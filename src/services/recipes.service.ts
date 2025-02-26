@@ -8,9 +8,13 @@ import {
   Tag
 } from '../models';
 import { Repository } from 'sequelize-typescript';
-import { FindOptions, Sequelize } from 'sequelize';
-import { recipeSchema } from '../utils/schemas/recipe.schema';
+import { FindOptions, Sequelize, Op } from 'sequelize';
+import {
+  recipeSchema,
+  softRecipeSchema
+} from '../utils/schemas/recipe.schema';
 import { RecipeInput } from '../types/Recipe';
+import Joi from 'joi';
 
 export class RecipesService extends BaseService<Recipe> {
   constructor(
@@ -48,21 +52,30 @@ export class RecipesService extends BaseService<Recipe> {
     return recipe;
   }
 
-  private async validateRecipeData(recipeData: RecipeInput) {
-    const { error } = recipeSchema.validate(recipeData);
-    if (error) {
-      throw boom.badRequest(
-        'Validation failed',
-        error.details.map((d) => d.message)
-      );
+  private async validateRecipeData(
+    recipeData: RecipeInput | Partial<RecipeInput>,
+    softValidating?: boolean
+  ) {
+    let result: Joi.ValidationResult;
+    if (softValidating) {
+      result = softRecipeSchema.validate(recipeData);
+    } else {
+      const existingRecipe = await this.recipeRepository.findOne({
+        where: { title: recipeData.title }
+      });
+
+      if (existingRecipe) {
+        throw boom.badData('This recipe title already exists');
+      }
+
+      result = recipeSchema.validate(recipeData);
     }
 
-    const existingRecipe = await this.recipeRepository.findOne({
-      where: { title: recipeData.title }
-    });
-
-    if (existingRecipe) {
-      throw boom.badData('This recipe title already exists');
+    if (result.error) {
+      throw boom.badRequest(
+        'Validation failed',
+        result.error.details.map((d) => d.message)
+      );
     }
   }
 
@@ -141,26 +154,105 @@ export class RecipesService extends BaseService<Recipe> {
       throw error;
     }
   }
-  /*
+
   public async updateRecipe(
-    id: number,
-    recipeUpdates: Partial<Recipe>
+    recipeId: number,
+    recipeUpdates: RecipeInput
   ) {
-    const validUpdates = this.validate(recipeUpdates, true);
+    const transaction = await this.sequelize.transaction();
 
-    const [affectedCount, updatedRecipe] = await this.update(
-      id,
-      validUpdates
-    );
+    try {
+      const recipe = await this.recipeRepository.findByPk(recipeId, {
+        transaction
+      });
 
-    if (affectedCount === 0) {
-      throw boom.notFound(`Recipe with ID ${id} not found`);
+      if (!recipe) {
+        throw boom.notFound('Recipe not found');
+      }
+
+      await this.validateRecipeData(recipeUpdates);
+
+      const {
+        instructions,
+        ingredients,
+        tags,
+        recipe: recipeData
+      } = await this.filterRecipeData(recipeUpdates);
+
+      console.log(recipeData);
+
+      await recipe.update(recipeData, { transaction });
+
+      console.log(recipe);
+
+      const newIngredientsIds: number[] = [];
+      for (const ingredient of ingredients) {
+        const { measurement, quantity, ...filteredIngredient } =
+          ingredient;
+
+        const [createdIngredient] = await Ingredient.findOrCreate({
+          where: { name: ingredient.name },
+          defaults: filteredIngredient,
+          transaction
+        });
+
+        newIngredientsIds.push(createdIngredient.id);
+
+        await RecipeIngredient.upsert(
+          {
+            recipeId,
+            ingredientId: createdIngredient.id,
+            quantity,
+            measurement
+          },
+          { transaction }
+        );
+
+        // Remove old ingredients that are not in the new list
+        await RecipeIngredient.destroy({
+          where: {
+            recipeId,
+            ingredientId: { [Op.notIn]: newIngredientsIds }
+          },
+          transaction
+        });
+
+        // Instructions processing
+        await Instruction.destroy({
+          where: { recipeId },
+          transaction
+        });
+        let step = 1;
+        for (const instruction of instructions) {
+          await Instruction.create(
+            { ...instruction, recipeId, step: step++ },
+            { transaction }
+          );
+        }
+
+        // Tags processing
+        const newTags: Tag[] = [];
+        for (const tag of tags) {
+          const [createdTag] = await Tag.findOrCreate({
+            where: { name: tag.name },
+            defaults: tag,
+            transaction
+          });
+          newTags.push(createdTag);
+        }
+
+        await recipe.$set('tags', newTags);
+
+        await transaction.commit();
+
+        return recipe;
+      }
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
     }
-
-    return updatedRecipe;
   }
 
-  /*
   public async replaceRecipe(id: number, recipe: Partial<Recipe>) {
     const validUpdates = this.validate(recipe, false);
 
@@ -175,7 +267,7 @@ export class RecipesService extends BaseService<Recipe> {
 
     return updatedRecipe;
   }
-
+  /*
   public async deleteRecipe(id: number) {
     const recipeIndex = await this.findRecipeIndex(id);
 

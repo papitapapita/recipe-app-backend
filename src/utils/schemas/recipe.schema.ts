@@ -2,7 +2,9 @@ import Joi from 'joi';
 import {
   instructionSchema,
   tagSchema,
-  recipeIngredientSchema
+  recipeIngredientSchema,
+  softIngredientsSchema,
+  softTagSchema
 } from '.';
 
 const title = Joi.string().min(3).max(100).messages({
@@ -62,6 +64,13 @@ const ingredients = Joi.array()
   .messages({
     'array.min': 'Tags should have at least {#limit} items'
   });
+const softInstructions = Joi.array()
+  .items(softIngredientsSchema)
+  .min(1);
+const softTags = Joi.array().items(softTagSchema).min(1);
+const softIngredients = Joi.array()
+  .items(softIngredientsSchema)
+  .min(1);
 
 const recipeSchema = Joi.object({
   title: title.required(),
@@ -88,9 +97,9 @@ const softRecipeSchema = Joi.object({
   carbs,
   protein,
   fat,
-  instructions,
-  ingredients,
-  tags
+  softInstructions,
+  softIngredients,
+  softTags
 });
 
 export { recipeSchema, softRecipeSchema };

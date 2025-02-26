@@ -1,5 +1,12 @@
 import { RecipeInput } from '../src/types/Recipe';
-import { beforeAll, describe, test, expect } from '@jest/globals';
+import {
+  beforeAll,
+  describe,
+  beforeEach,
+  test,
+  expect,
+  jest
+} from '@jest/globals';
 import { sequelize, recipesService } from './jest.setup';
 import {
   Ingredient,
@@ -150,5 +157,40 @@ describe('Recipe Service Layer', () => {
     });
 
     expect(recipes.length).toBe(0);
+  });
+
+  test('should update a recipe successfully', async () => {
+    try {
+      const updatedData = {
+        title: 'Updated Recipe',
+        description: 'Updated Description',
+        imageUrl: 'https://example.com/image.jpg',
+        ingredients: [
+          { name: 'New Ingredient', quantity: 2, measurement: 'cups' }
+        ],
+        instructions: [
+          { title: 'Step 1', description: 'Do something' }
+        ],
+        tags: [{ name: 'Updated Tag' }]
+      };
+
+      const recipe = await recipesService.updateRecipe(
+        1,
+        updatedData
+      );
+
+      console.log(recipe);
+
+      expect(recipe?.title).toBe('Updated Recipe');
+      expect(recipe?.description).toBe('Updated Description');
+
+      const ingredients = await RecipeIngredient.findAll({
+        where: { recipeId: recipe?.id }
+      });
+      expect(ingredients.length).toBe(1);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   });
 });

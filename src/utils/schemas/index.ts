@@ -9,3 +9,4 @@ export {
 } from './instruction.schema';
 export { tagSchema, softTagSchema } from './tag.schema';
 export { recipeSchema, softRecipeSchema } from './recipe.schema';
+export { idSchema } from './id.schema';

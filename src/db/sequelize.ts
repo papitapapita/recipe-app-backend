@@ -8,7 +8,7 @@ import {
   RecipeTag,
   Tag
 } from '../models';
-//import { seedDatabase } from '../db/seedDatabase';
+import { seedDatabase } from '../db/seedDatabase';
 
 const USER = encodeURIComponent(config.dbUser);
 const PASSWORD = encodeURIComponent(config.dbPassword);
@@ -33,7 +33,8 @@ const sequelize = new Sequelize({
 } as SequelizeOptions);
 
 try {
-  await sequelize.sync({ alter: true });
+  await sequelize.sync({ alter: true, force: true });
+  await seedDatabase(sequelize);
   console.log('Database Succesfully created');
 } catch (error) {
   console.error('Failed to synchronize database: ', error);

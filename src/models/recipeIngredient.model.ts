@@ -14,7 +14,8 @@ import { Ingredient } from './ingredient.model';
 
 @Table({
   tableName: 'recipes_ingredients',
-  indexes: [{ fields: ['recipeId', 'ingredientId'], unique: true }]
+  indexes: [{ fields: ['recipe_id', 'ingredient_id'], unique: true }],
+  timestamps: false
 })
 export class RecipeIngredient extends Model {
   @PrimaryKey
@@ -24,12 +25,18 @@ export class RecipeIngredient extends Model {
 
   @ForeignKey(() => Recipe)
   @AllowNull(false)
-  @Column(DataType.INTEGER)
+  @Column({
+    type: DataType.INTEGER,
+    field: 'recipe_id'
+  })
   recipeId!: number;
 
   @ForeignKey(() => Ingredient)
   @AllowNull(false)
-  @Column(DataType.INTEGER)
+  @Column({
+    type: DataType.INTEGER,
+    field: 'ingredient_id'
+  })
   ingredientId!: number;
 
   @AllowNull(false)

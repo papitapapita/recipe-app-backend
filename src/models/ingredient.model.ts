@@ -13,7 +13,8 @@ import { RecipeIngredient } from './recipeIngredient.model';
 import { Recipe } from './recipe.model';
 
 @Table({
-  tableName: 'ingredients'
+  tableName: 'ingredients',
+  timestamps: false
 })
 export class Ingredient extends Model {
   @PrimaryKey

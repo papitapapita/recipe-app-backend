@@ -10,10 +10,12 @@ import {
   Table
 } from 'sequelize-typescript';
 import { Recipe } from './recipe.model';
+import { fi } from '@faker-js/faker/.';
 
 @Table({
   tableName: 'instructions',
-  indexes: [{ fields: ['recipeId'] }]
+  indexes: [{ fields: ['recipe_id'] }],
+  timestamps: false
 })
 export class Instruction extends Model {
   @PrimaryKey
@@ -24,7 +26,10 @@ export class Instruction extends Model {
 
   @ForeignKey(() => Recipe)
   @AllowNull(false)
-  @Column(DataType.INTEGER)
+  @Column({
+    type: DataType.INTEGER,
+    field: 'recipe_id'
+  })
   recipeId!: number;
 
   @BelongsTo(() => Recipe, { onDelete: 'CASCADE' })

@@ -1,7 +1,11 @@
-import { recipesService } from '../services/recipes.service';
+import { RecipesService } from '../services/recipes.service';
 import { Response } from 'express';
 import tryCatch from '../utils/tryCatch';
 import boom from '../../node_modules/@hapi/boom/lib/index';
+import { sequelize } from '../db/sequelize';
+import { Recipe } from '../models';
+
+const recipesService = new RecipesService(sequelize, Recipe);
 
 export default class RecipeController {
   private validateId(id: string | undefined): number {
@@ -40,13 +44,18 @@ export default class RecipeController {
       const { size } = req.query;
 
       let parsedSize: number | undefined;
+      let recipes;
       if (size) {
         parsedSize = parseInt(size as string);
         if (!parsedSize || parsedSize <= 0) {
           throw boom.badRequest('Invalid size parameter');
         }
+        recipes = await recipesService.getAllRecipes({
+          limit: parsedSize
+        });
+      } else {
+        recipes = await recipesService.getAllRecipes();
       }
-      const recipes = await recipesService.getAllRecipes(parsedSize);
 
       this.sendResponse(res, 200, 'Recipes Retrieved', recipes);
     });

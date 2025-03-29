@@ -37,15 +37,24 @@ class Recipe extends Model {
   description!: string;
 
   @AllowNull(true)
-  @Column(DataType.INTEGER)
+  @Column({
+    type: DataType.INTEGER,
+    field: 'preparing_time'
+  })
   preparingTime?: number;
 
   @AllowNull(true)
-  @Column(DataType.INTEGER)
+  @Column({
+    type: DataType.INTEGER,
+    field: 'cooking_time'
+  })
   cookingTime?: number;
 
   @AllowNull(false)
-  @Column(DataType.STRING)
+  @Column({
+    type: DataType.STRING,
+    field: 'image_url'
+  })
   imageUrl!: string;
 
   @AllowNull(true)

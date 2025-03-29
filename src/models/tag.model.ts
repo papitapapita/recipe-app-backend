@@ -12,7 +12,7 @@ import {
 import { Recipe } from './recipe.model';
 import { RecipeTag } from './recipeTag.model';
 
-@Table({ tableName: 'tags' })
+@Table({ tableName: 'tags', timestamps: false })
 export class Tag extends Model {
   @PrimaryKey
   @AutoIncrement

@@ -39,11 +39,30 @@ export class RecipesService extends BaseService<Recipe> {
       findOptions.order = options.order;
     }
 
-    return await this.findAll(options);
+    const recipes = await this.findAll({
+      ...options,
+      include: [
+        {
+          model: Ingredient,
+          attributes: ['name'],
+          through: { attributes: ['quantity', 'measurement'] }
+        },
+        {
+          model: Instruction,
+          attributes: ['step', 'title', 'description']
+        },
+        {
+          model: Tag,
+          attributes: ['name']
+        }
+      ]
+    });
+
+    return recipes.map(this.transformRecipe);
   }
 
   public async getRecipe(id: number): Promise<RecipeWithRelations> {
-    const recipe = (await this.findById(id, {
+    const recipe = await this.findById(id, {
       include: [
         {
           model: Ingredient,
@@ -56,12 +75,16 @@ export class RecipesService extends BaseService<Recipe> {
         },
         { model: Tag, attributes: ['name'] }
       ]
-    })) as unknown as RecipeWithRelations;
+    });
 
     if (!recipe) {
       throw boom.notFound(`Recipe with ID ${id} not found`);
     }
 
+    return this.transformRecipe(recipe);
+  }
+
+  private transformRecipe(recipe: Recipe): RecipeWithRelations {
     const recipeJson = recipe.toJSON() as RecipeWithRelations as any;
 
     if (recipeJson.ingredients) {

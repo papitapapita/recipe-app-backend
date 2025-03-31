@@ -13,7 +13,7 @@ import {
   recipeSchema,
   softRecipeSchema
 } from '../utils/schemas/recipe.schema';
-import { RecipeInput } from '../types/Recipe';
+import { RecipeInput, RecipeWithRelations } from '../types/Recipe';
 import Joi from 'joi';
 
 export class RecipesService extends BaseService<Recipe> {
@@ -42,14 +42,51 @@ export class RecipesService extends BaseService<Recipe> {
     return await this.findAll(options);
   }
 
-  public async getRecipe(id: number): Promise<Recipe> {
-    const recipe = await this.findById(id);
+  public async getRecipe(id: number): Promise<RecipeWithRelations> {
+    const recipe = (await this.findById(id, {
+      include: [
+        {
+          model: Ingredient,
+          attributes: ['name'],
+          through: { attributes: ['quantity', 'measurement'] }
+        },
+        {
+          model: Instruction,
+          attributes: ['step', 'title', 'description']
+        },
+        { model: Tag, attributes: ['name'] }
+      ]
+    })) as unknown as RecipeWithRelations;
 
     if (!recipe) {
       throw boom.notFound(`Recipe with ID ${id} not found`);
     }
 
-    return recipe;
+    const recipeJson = recipe.toJSON() as RecipeWithRelations as any;
+
+    if (recipeJson.ingredients) {
+      recipeJson.ingredients = recipeJson.ingredients.map(
+        (ingredient: any) => {
+          const { RecipeIngredient, ...rest } = ingredient;
+          return {
+            ...rest,
+            quantity: RecipeIngredient?.quantity,
+            measurment: RecipeIngredient?.measurement
+          };
+        }
+      );
+    }
+
+    if (recipeJson.tags) {
+      recipeJson.tags = recipeJson.tags.map((tag: any) => {
+        const { name } = tag;
+        return {
+          name
+        };
+      });
+    }
+
+    return recipeJson;
   }
 
   private async validateRecipeData(

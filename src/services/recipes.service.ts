@@ -155,7 +155,6 @@ export class RecipesService extends BaseService<Recipe> {
   public async createRecipe(recipeData: RecipeInput) {
     const data = await this.filterRecipeData(recipeData);
     const transaction = await this.sequelize.transaction();
-
     try {
       const recipe = await this.recipeRepository.create(data.recipe, {
         transaction
@@ -171,12 +170,15 @@ export class RecipesService extends BaseService<Recipe> {
           transaction
         });
 
-        await RecipeIngredient.create({
-          recipeId: recipe.id,
-          ingredientId: createdIngredient.id,
-          quantity,
-          measurement
-        });
+        await RecipeIngredient.create(
+          {
+            recipeId: recipe.id,
+            ingredientId: createdIngredient.id,
+            quantity,
+            measurement
+          },
+          { transaction }
+        );
       }
 
       let currentStep = 1;
@@ -222,6 +224,7 @@ export class RecipesService extends BaseService<Recipe> {
     const transaction = await this.sequelize.transaction();
 
     try {
+      console.log('Im here');
       const recipe = await this.recipeRepository.findByPk(recipeId, {
         transaction
       });
@@ -240,7 +243,6 @@ export class RecipesService extends BaseService<Recipe> {
       } = await this.filterRecipeData(recipeUpdates);
 
       await recipe.update(recipeData, { transaction });
-
       const newIngredientsIds: number[] = [];
       for (const ingredient of ingredients) {
         const { measurement, quantity, ...filteredIngredient } =
@@ -320,6 +322,7 @@ export class RecipesService extends BaseService<Recipe> {
         transaction
       });
 
+      console.log(recipe?.toJSON());
       if (!recipe) {
         throw boom.notFound('Recipe not found');
       }
@@ -331,6 +334,7 @@ export class RecipesService extends BaseService<Recipe> {
         ingredients
       } = await this.filterRecipeData(newRecipe);
 
+      console.log(recipeUpdates);
       await recipe.update(
         {
           preparingTime: null,
@@ -344,10 +348,12 @@ export class RecipesService extends BaseService<Recipe> {
         { transaction }
       );
 
-      await RecipeIngredient.destroy({
+      const updatedRecipe = await RecipeIngredient.destroy({
         where: { recipeId },
         transaction
       });
+
+      console.log(updatedRecipe);
 
       const newIngredientsIds: number[] = [];
 
@@ -361,8 +367,11 @@ export class RecipesService extends BaseService<Recipe> {
           transaction
         });
 
+        console.log(createdIngredient.toJSON());
+
         newIngredientsIds.push(createdIngredient.id);
 
+        // What if this recipe has this ingredient
         await RecipeIngredient.create(
           {
             recipeId,
@@ -377,11 +386,14 @@ export class RecipesService extends BaseService<Recipe> {
       await Instruction.destroy({ where: { recipeId }, transaction });
       let step = 1;
       for (const instruction of instructions) {
-        await Instruction.create({
-          ...instruction,
-          recipeId,
-          step: step++
-        });
+        await Instruction.create(
+          {
+            ...instruction,
+            recipeId,
+            step: step++
+          },
+          { transaction }
+        );
       }
 
       await recipe.$set('tags', []);
@@ -397,7 +409,9 @@ export class RecipesService extends BaseService<Recipe> {
         newTags.push(createdTag);
       }
 
-      await recipe.$set('tags', newTags);
+      console.log(newTags.map((tag) => tag.toJSON()));
+      // Here
+      await recipe.$set('tags', newTags, { transaction });
 
       await transaction.commit();
       return recipe;

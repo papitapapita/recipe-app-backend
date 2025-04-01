@@ -65,6 +65,7 @@ export default class RecipeController {
     return tryCatch(async (req, res) => {
       const { body } = req;
 
+      console.log(body);
       const recipe = await recipesService.createRecipe(body);
 
       this.sendResponse(res, 201, 'Recipe Created', recipe);

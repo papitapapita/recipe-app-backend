@@ -96,7 +96,7 @@ export default class RecipeController {
         body
       );
 
-      this.sendResponse(res, 204, 'Recipe replaced', replacedRecipe);
+      this.sendResponse(res, 201, 'Recipe replaced', replacedRecipe);
     });
   }
 

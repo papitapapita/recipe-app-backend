@@ -35,7 +35,7 @@ router.put(
 router.patch(
   '/:id',
   validate(idSchema, 'params'),
-  validate(softRecipeSchema, 'body'),
+  validate(recipeSchema, 'body'),
   recipeController.updateRecipe()
 );
 

@@ -1,9 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import MiddlewareFunction from '../types/MiddlewareFunction';
 
-export default function tryCatch(
-  callback: MiddlewareFunction
-) {
+export default function tryCatch(callback: MiddlewareFunction) {
   return async function (
     req: Request,
     res: Response,
@@ -12,6 +10,9 @@ export default function tryCatch(
     try {
       await callback(req, res, next);
     } catch (error) {
+      res.json({
+        error
+      });
       next(error);
     }
   };

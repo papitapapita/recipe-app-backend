@@ -106,7 +106,7 @@ export default class RecipeController {
 
       recipesService.deleteRecipe(id);
 
-      this.sendResponse(res, 204, 'Recipe Deleted');
+      this.sendResponse(res, 201, 'Recipe Deleted');
     });
   }
 }

@@ -10,7 +10,6 @@ import {
   Table
 } from 'sequelize-typescript';
 import { Recipe } from './recipe.model';
-import { fi } from '@faker-js/faker/.';
 
 @Table({
   tableName: 'instructions',

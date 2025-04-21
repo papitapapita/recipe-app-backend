@@ -33,7 +33,9 @@ const sequelize = new Sequelize({
 } as SequelizeOptions);
 
 try {
-  await sequelize.sync({ alter: true, force: true });
+  if (process.env.NODE_ENV === 'development') {
+    await sequelize.sync({ alter: true, force: true });
+  }
   await seedDatabase(sequelize);
   console.log('Database Succesfully created');
 } catch (error) {

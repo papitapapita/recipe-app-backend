@@ -10,7 +10,8 @@
     "ts": "npx tsc --watch",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
-    "test:verbose": "jest --verbose"
+    "test:verbose": "jest --verbose",
+    "seed:generate": "NODE_OPTIONS='--require ts-node/register' sequelize-cli seed:generate"
   },
   "keywords": [],
   "author": "Jonathan O",

@@ -13,7 +13,7 @@ const title = Joi.string().min(3).max(100).messages({
   'string.min': 'Title should have a minimum length of {#limit}',
   'string.max': 'Title should have a maximum length of {#limit}'
 });
-const description = Joi.string().min(5).max(100).messages({
+const description = Joi.string().min(5).max(1000).messages({
   'string.base': 'Description should be a type of text',
   'string.empty': 'Description cannot be an empty field',
   'string.min':

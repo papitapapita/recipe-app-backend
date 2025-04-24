@@ -8,7 +8,7 @@ import {
   Tag
 } from '../db/models';
 import { Repository } from 'sequelize-typescript';
-import { FindOptions, Sequelize, Op } from 'sequelize';
+import { FindOptions, Sequelize, Op, Transaction } from 'sequelize';
 import {
   recipeSchema,
   softRecipeSchema
@@ -179,67 +179,117 @@ export class RecipesService extends BaseService<Recipe> {
   public async createRecipe(recipeData: RecipeInput) {
     const transaction = await this.sequelize.transaction();
     try {
+      // Validate and prepare recipe data
       const data = await this.filterRecipeData(recipeData);
-      const recipe = await this.recipeRepository.create(data.recipe, {
-        transaction
-      });
+      console.log('Creating recipe with data:', data.recipe);
 
-      for (let ingredient of data.ingredients) {
-        const { measurement, quantity, ...filteredIngredient } =
-          ingredient;
-
-        const [createdIngredient] = await Ingredient.findOrCreate({
-          where: { name: ingredient.name },
-          defaults: filteredIngredient,
+      // Create the main recipe
+      const rawRecipe = await this.recipeRepository.create(
+        data.recipe,
+        {
           transaction
-        });
-
-        await RecipeIngredient.create(
-          {
-            recipeId: recipe.id,
-            ingredientId: createdIngredient.id,
-            quantity,
-            measurement
-          },
-          { transaction }
-        );
-      }
-
-      let currentStep = 1;
-      for (let instruction of data.instructions) {
-        await Instruction.create(
-          {
-            ...instruction,
-            recipeId: recipe.id,
-            step: currentStep++
-          },
-          { transaction }
-        );
-      }
-
-      if (data.tags) {
-        const tags: Tag[] = [];
-
-        for (let tag of data.tags) {
-          const createdTag = await Tag.findOrCreate({
-            where: { name: tag.name },
-            defaults: tag,
-            transaction
-          });
-          tags.push(createdTag[0]);
         }
+      );
+      const recipe = rawRecipe.toJSON();
+      console.log('Created recipe with ID:', recipe.id);
 
-        recipe.$add('tags', tags);
+      // Create ingredients and their relationships
+      await this.createRecipeIngredients(
+        recipe.id,
+        data.ingredients,
+        transaction
+      );
+
+      // Create instructions
+      await this.createRecipeInstructions(
+        recipe.id,
+        data.instructions,
+        transaction
+      );
+
+      // Create tags if provided
+      if (data.tags?.length > 0) {
+        await this.createRecipeTags(
+          rawRecipe,
+          data.tags,
+          transaction
+        );
       }
 
       await transaction.commit();
-
+      console.log('Transaction committed successfully');
       return recipe;
     } catch (error) {
       await transaction.rollback();
-      console.error(error);
+      console.error('Error in createRecipe:', error);
       throw error;
     }
+  }
+
+  private async createRecipeIngredients(
+    recipeId: number,
+    ingredients: RecipeInput['ingredients'],
+    transaction: Transaction
+  ) {
+    for (const ingredient of ingredients) {
+      const { measurement, quantity, ...filteredIngredient } =
+        ingredient;
+
+      const [rawCreatedIngredient] = await Ingredient.findOrCreate({
+        where: { name: ingredient.name },
+        defaults: filteredIngredient,
+        transaction
+      });
+
+      const createdIngredient = rawCreatedIngredient.toJSON();
+
+      await RecipeIngredient.create(
+        {
+          recipeId,
+          ingredientId: createdIngredient.id,
+          quantity,
+          measurement
+        },
+        { transaction }
+      );
+    }
+  }
+
+  private async createRecipeInstructions(
+    recipeId: number,
+    instructions: RecipeInput['instructions'],
+    transaction: Transaction
+  ) {
+    let currentStep = 1;
+    for (const instruction of instructions) {
+      await Instruction.create(
+        {
+          ...instruction,
+          recipeId,
+          step: currentStep++
+        },
+        { transaction }
+      );
+    }
+  }
+
+  private async createRecipeTags(
+    recipe: Recipe,
+    tags: RecipeInput['tags'] | undefined,
+    transaction: any
+  ) {
+    if (!tags) return;
+
+    const createdTags: Tag[] = [];
+    for (const tag of tags) {
+      const [createdTag] = await Tag.findOrCreate({
+        where: { name: tag.name },
+        defaults: tag,
+        transaction
+      });
+      createdTags.push(createdTag);
+    }
+    await recipe.$set('tags', createdTags, { transaction });
   }
 
   public async updateRecipe(

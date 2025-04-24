@@ -29,133 +29,157 @@ export class RecipesService extends BaseService<Recipe> {
     limit?: number;
     order?: [string, 'ASC' | 'DESC'][];
   }): Promise<Recipe[]> {
-    const findOptions: FindOptions = {};
+    try {
+      const findOptions: FindOptions = {
+        include: [
+          {
+            model: Ingredient,
+            attributes: ['name'],
+            through: { attributes: ['quantity', 'measurement'] }
+          },
+          {
+            model: Instruction,
+            attributes: ['step', 'title', 'description']
+          },
+          {
+            model: Tag,
+            attributes: ['name']
+          }
+        ]
+      };
 
-    if (options?.limit) {
-      findOptions.limit = options.limit;
+      if (options?.limit) {
+        findOptions.limit = options.limit;
+      }
+
+      if (options?.order) {
+        findOptions.order = options.order;
+      }
+
+      const recipes = await this.findAll(findOptions);
+      return recipes.map(this.transformRecipe);
+    } catch (error) {
+      console.error(error);
+      throw error;
     }
-
-    if (options?.order) {
-      findOptions.order = options.order;
-    }
-
-    const recipes = await this.findAll({
-      ...options,
-      include: [
-        {
-          model: Ingredient,
-          attributes: ['name'],
-          through: { attributes: ['quantity', 'measurement'] }
-        },
-        {
-          model: Instruction,
-          attributes: ['step', 'title', 'description']
-        },
-        {
-          model: Tag,
-          attributes: ['name']
-        }
-      ]
-    });
-
-    return recipes.map(this.transformRecipe);
   }
 
   public async getRecipe(id: number): Promise<RecipeWithRelations> {
-    const recipe = await this.findById(id, {
-      include: [
-        {
-          model: Ingredient,
-          attributes: ['name'],
-          through: { attributes: ['quantity', 'measurement'] }
-        },
-        {
-          model: Instruction,
-          attributes: ['step', 'title', 'description']
-        },
-        { model: Tag, attributes: ['name'] }
-      ]
-    });
+    try {
+      const recipe = await this.findById(id, {
+        include: [
+          {
+            model: Ingredient,
+            attributes: ['name'],
+            through: { attributes: ['quantity', 'measurement'] }
+          },
+          {
+            model: Instruction,
+            attributes: ['step', 'title', 'description']
+          },
+          { model: Tag, attributes: ['name'] }
+        ]
+      });
 
-    if (!recipe) {
-      throw boom.notFound(`Recipe with ID ${id} not found`);
+      if (!recipe) {
+        throw boom.notFound(`Recipe with ID ${id} not found`);
+      }
+
+      return this.transformRecipe(recipe);
+    } catch (error) {
+      console.error(error);
+      throw error;
     }
-
-    return this.transformRecipe(recipe);
   }
 
   private transformRecipe(recipe: Recipe): RecipeWithRelations {
-    const recipeJson = recipe.toJSON() as RecipeWithRelations as any;
+    try {
+      const recipeJson =
+        recipe.toJSON() as RecipeWithRelations as any;
 
-    if (recipeJson.ingredients) {
-      recipeJson.ingredients = recipeJson.ingredients.map(
-        (ingredient: any) => {
-          const { RecipeIngredient, ...rest } = ingredient;
+      if (recipeJson.ingredients) {
+        recipeJson.ingredients = recipeJson.ingredients.map(
+          (ingredient: any) => {
+            const { RecipeIngredient, ...rest } = ingredient;
+            return {
+              ...rest,
+              quantity: RecipeIngredient?.quantity,
+              measurement: RecipeIngredient?.measurement
+            };
+          }
+        );
+      }
+
+      if (recipeJson.tags) {
+        recipeJson.tags = recipeJson.tags.map((tag: any) => {
+          const { name } = tag;
           return {
-            ...rest,
-            quantity: RecipeIngredient?.quantity,
-            measurment: RecipeIngredient?.measurement
+            name
           };
-        }
-      );
-    }
+        });
+      }
 
-    if (recipeJson.tags) {
-      recipeJson.tags = recipeJson.tags.map((tag: any) => {
-        const { name } = tag;
-        return {
-          name
-        };
-      });
+      return recipeJson;
+    } catch (error) {
+      console.error(error);
+      throw error;
     }
-
-    return recipeJson;
   }
 
   private async validateRecipeData(
     recipeData: RecipeInput | Partial<RecipeInput>,
     softValidating?: boolean
   ) {
-    let result: Joi.ValidationResult;
-    if (softValidating) {
-      result = softRecipeSchema.validate(recipeData);
-    } else {
-      const existingRecipe = await this.recipeRepository.findOne({
-        where: { title: recipeData.title }
-      });
+    try {
+      let result: Joi.ValidationResult;
+      if (softValidating) {
+        result = softRecipeSchema.validate(recipeData);
+      } else {
+        const existingRecipe = await this.recipeRepository.findOne({
+          where: { title: recipeData.title }
+        });
 
-      if (existingRecipe) {
-        throw boom.badData('This recipe title already exists');
+        if (existingRecipe) {
+          throw boom.badData('This recipe title already exists');
+        }
+
+        result = recipeSchema.validate(recipeData);
       }
 
-      result = recipeSchema.validate(recipeData);
-    }
-
-    if (result.error) {
-      throw boom.badRequest(
-        'Validation failed',
-        result.error.details.map((d) => d.message)
-      );
+      if (result.error) {
+        throw boom.badRequest(
+          'Validation failed',
+          result.error.details.map((d) => d.message)
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      throw error;
     }
   }
 
   private async filterRecipeData(recipeData: RecipeInput) {
-    await this.validateRecipeData(recipeData);
+    try {
+      await this.validateRecipeData(recipeData);
 
-    const {
-      instructions,
-      ingredients,
-      tags = [],
-      ...recipe
-    } = recipeData;
+      const {
+        instructions,
+        ingredients,
+        tags = [],
+        ...recipe
+      } = recipeData;
 
-    return { recipe, instructions, ingredients, tags };
+      return { recipe, instructions, ingredients, tags };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   }
 
   public async createRecipe(recipeData: RecipeInput) {
-    const data = await this.filterRecipeData(recipeData);
     const transaction = await this.sequelize.transaction();
     try {
+      const data = await this.filterRecipeData(recipeData);
       const recipe = await this.recipeRepository.create(data.recipe, {
         transaction
       });
@@ -213,6 +237,7 @@ export class RecipesService extends BaseService<Recipe> {
       return recipe;
     } catch (error) {
       await transaction.rollback();
+      console.error(error);
       throw error;
     }
   }
@@ -231,8 +256,6 @@ export class RecipesService extends BaseService<Recipe> {
       if (!recipe) {
         throw boom.notFound('Recipe not found');
       }
-
-      console.log(recipeUpdates);
 
       await this.validateRecipeData(recipeUpdates);
 
@@ -308,6 +331,7 @@ export class RecipesService extends BaseService<Recipe> {
       }
     } catch (error) {
       await transaction.rollback();
+      console.error(error);
       throw error;
     }
   }
@@ -410,6 +434,7 @@ export class RecipesService extends BaseService<Recipe> {
       return recipe;
     } catch (error) {
       await transaction.rollback();
+      console.error(error);
       throw error;
     }
   }
@@ -438,6 +463,7 @@ export class RecipesService extends BaseService<Recipe> {
       return { message: 'Recipe deleted successfully' };
     } catch (error) {
       await transaction.rollback();
+      console.error(error);
       throw error;
     }
   }

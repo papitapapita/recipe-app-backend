@@ -18,7 +18,8 @@ import { Instruction } from './instruction.model';
 
 @Table({
   tableName: 'recipes',
-  timestamps: true
+  timestamps: true,
+  underscored: true
 })
 class Recipe extends Model {
   @PrimaryKey

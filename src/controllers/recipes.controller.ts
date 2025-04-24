@@ -56,6 +56,7 @@ export default class RecipeController {
       } else {
         recipes = await recipesService.getAllRecipes();
       }
+      console.log(recipes)
 
       this.sendResponse(res, 200, 'Recipes Retrieved', recipes);
     });

@@ -7,7 +7,7 @@ import {
   RecipeIngredient,
   Instruction,
   RecipeTag
-} from '../src/models';
+} from '../src/db/models';
 import { RecipesService } from '../src/services/recipes.service';
 
 let sequelize: Sequelize;

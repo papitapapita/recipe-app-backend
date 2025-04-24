@@ -14,7 +14,7 @@ import {
   Instruction,
   RecipeIngredient,
   RecipeTag
-} from '../src/models';
+} from '../src/db/models';
 import {
   createRecipes,
   createInstructions,

@@ -9,7 +9,7 @@ module.exports = {
   async down(queryInterface: QueryInterface) {
     await queryInterface.bulkDelete('instructions', {
       [Op.or]: INSTRUCTIONS.map((instruction) => ({
-        recipeId: instruction.recipeId,
+        recipeId: instruction.recipe_id,
         step: instruction.step
       }))
     });

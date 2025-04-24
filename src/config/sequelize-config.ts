@@ -1,12 +1,13 @@
 import { SequelizeOptions } from 'sequelize-typescript';
 import { config as appConfig } from './config';
+import { Dialect } from 'sequelize';
 
 const USER = encodeURIComponent(appConfig.dbUser);
 const PASSWORD = encodeURIComponent(appConfig.dbPassword);
 
 const dbConfig: { [env: string]: SequelizeOptions } = {
   development: {
-    dialect: 'postgres',
+    dialect: 'postgres' as Dialect,
     host: appConfig.dbHost,
     port: appConfig.dbPort,
     username: USER,
@@ -15,4 +16,4 @@ const dbConfig: { [env: string]: SequelizeOptions } = {
   }
 };
 
-export default dbConfig;
+module.exports = dbConfig;

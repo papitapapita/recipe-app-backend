@@ -12,8 +12,8 @@ module.exports = {
   async down(queryInterface: QueryInterface) {
     await queryInterface.bulkDelete('recipes_ingredients', {
       [Op.or]: RECIPE_INGREDIENTS.map((recipeIngredient) => ({
-        recipeId: recipeIngredient.recipeId,
-        ingredientId: recipeIngredient.ingredientId
+        recipeId: recipeIngredient.recipe_id,
+        ingredientId: recipeIngredient.ingredient_id
       }))
     });
   }

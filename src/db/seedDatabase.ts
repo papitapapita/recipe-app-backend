@@ -8,7 +8,7 @@ export async function seedDatabase(sequelize: Sequelize) {
     console.log('Connected to the database');
 
     const sqlFilePath = path.resolve(
-      import.meta.dirname,
+      __dirname,
       './migrations/initial.sql'
     );
     const sqlScript = fs.readFileSync(sqlFilePath, 'utf-8');
@@ -16,5 +16,6 @@ export async function seedDatabase(sequelize: Sequelize) {
     console.log('Database seeded successfully');
   } catch (error) {
     console.error('Error seeding database:', error);
+    throw error;
   }
 }

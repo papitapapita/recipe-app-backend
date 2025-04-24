@@ -3,7 +3,7 @@ import { Response } from 'express';
 import tryCatch from '../utils/tryCatch';
 import boom from '../../node_modules/@hapi/boom/lib/index';
 import { sequelize } from '../db/sequelize';
-import { Recipe } from '../models';
+import { Recipe } from '../db/models';
 
 const recipesService = new RecipesService(sequelize, Recipe);
 

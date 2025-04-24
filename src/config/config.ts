@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-const config = {
+export const config = {
   env: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT) || 3000,
   dbUser: process.env.DB_USER || 'admin',
@@ -9,5 +9,3 @@ const config = {
   dbPort: Number(process.env.DB_PORT) || 5432,
   dbName: process.env.DB_NAME || 'postgres'
 } as const;
-
-export { config };

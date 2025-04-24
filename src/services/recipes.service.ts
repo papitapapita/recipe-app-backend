@@ -6,7 +6,7 @@ import {
   Recipe,
   RecipeIngredient,
   Tag
-} from '../models';
+} from '../db/models';
 import { Repository } from 'sequelize-typescript';
 import { FindOptions, Sequelize, Op } from 'sequelize';
 import {

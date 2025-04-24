@@ -3,7 +3,6 @@ import validate from '../middlewares/validator';
 import {
   idSchema,
   recipeSchema,
-  softRecipeSchema
 } from '../utils/schemas';
 import RecipeController from '../controllers/recipes.controller';
 

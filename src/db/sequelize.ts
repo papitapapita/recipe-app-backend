@@ -1,4 +1,4 @@
-import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
+import { Sequelize } from 'sequelize-typescript';
 import { config } from '../config/config';
 import {
   Ingredient,
@@ -7,8 +7,8 @@ import {
   RecipeIngredient,
   RecipeTag,
   Tag
-} from '../models';
-import { seedDatabase } from '../db/seedDatabase';
+} from './models';
+import { seedDatabase } from './seedDatabase';
 
 const USER = encodeURIComponent(config.dbUser);
 const PASSWORD = encodeURIComponent(config.dbPassword);
@@ -29,17 +29,25 @@ const sequelize = new Sequelize({
     Instruction,
     RecipeTag,
     RecipeIngredient
-  ]
-} as SequelizeOptions);
-
-try {
-  if (process.env.NODE_ENV === 'development') {
-    await sequelize.sync({ alter: true, force: true });
+  ],
+  modelMatch: (filename, member) => {
+    return (
+      filename.substring(0, filename.indexOf('.model')) ===
+      member.toLowerCase()
+    );
   }
-  await seedDatabase(sequelize);
-  console.log('Database Succesfully created');
-} catch (error) {
-  console.error('Failed to synchronize database: ', error);
+});
+
+async function initializeDatabase() {
+  try {
+    await sequelize.sync({ alter: true, force: true });
+    console.log('Database synchronized successfully.');
+    await seedDatabase(sequelize);
+    console.log('Database seeded successfully.');
+  } catch (error) {
+    console.error('Error initializing database:', error);
+    throw error;
+  }
 }
 
-export { sequelize };
+export { sequelize, initializeDatabase };

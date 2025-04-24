@@ -1,4 +1,4 @@
-import { Tag } from '../src/models';
+import { Tag } from '../src/db/models';
 import { describe, test, expect, beforeEach } from '@jest/globals';
 
 const testTag = {

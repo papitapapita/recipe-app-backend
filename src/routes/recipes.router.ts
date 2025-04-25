@@ -3,6 +3,7 @@ import validate from '../middlewares/validator';
 import {
   idSchema,
   recipeSchema,
+  softRecipeSchema
 } from '../utils/schemas';
 import RecipeController from '../controllers/recipes.controller';
 
@@ -34,7 +35,7 @@ router.put(
 router.patch(
   '/:id',
   validate(idSchema, 'params'),
-  validate(recipeSchema, 'body'),
+  validate(softRecipeSchema, 'body'),
   recipeController.updateRecipe()
 );
 

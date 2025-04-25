@@ -13,7 +13,13 @@ import {
   recipeSchema,
   softRecipeSchema
 } from '../utils/schemas/recipe.schema';
-import { RecipeInput, RecipeWithRelations } from '../types/Recipe';
+import {
+  RecipeInput,
+  RecipeWithRelations,
+  PartialRecipeInput
+} from '../types/Recipe';
+import { IngredientDTO } from '../types/Ingredient';
+import { InstructionDTO } from '../types/Instruction';
 import Joi from 'joi';
 
 export class RecipesService extends BaseService<Recipe> {
@@ -28,7 +34,7 @@ export class RecipesService extends BaseService<Recipe> {
   public async getAllRecipes(options?: {
     limit?: number;
     order?: [string, 'ASC' | 'DESC'][];
-  }): Promise<Recipe[]> {
+  }): Promise<RecipeWithRelations[]> {
     try {
       const findOptions: FindOptions = {
         include: [
@@ -59,14 +65,14 @@ export class RecipesService extends BaseService<Recipe> {
       const recipes = await this.findAll(findOptions);
       return recipes.map(this.transformRecipe);
     } catch (error) {
-      console.error(error);
+      console.error('Error in getAllRecipes:', error);
       throw error;
     }
   }
 
   public async getRecipe(id: number): Promise<RecipeWithRelations> {
     try {
-      const recipe = await this.findById(id, {
+      const findOptions: FindOptions = {
         include: [
           {
             model: Ingredient,
@@ -77,9 +83,14 @@ export class RecipesService extends BaseService<Recipe> {
             model: Instruction,
             attributes: ['step', 'title', 'description']
           },
-          { model: Tag, attributes: ['name'] }
+          {
+            model: Tag,
+            attributes: ['name']
+          }
         ]
-      });
+      };
+
+      const recipe = await this.findById(id, findOptions);
 
       if (!recipe) {
         throw boom.notFound(`Recipe with ID ${id} not found`);
@@ -87,7 +98,7 @@ export class RecipesService extends BaseService<Recipe> {
 
       return this.transformRecipe(recipe);
     } catch (error) {
-      console.error(error);
+      console.error(`Error fetching recipe with ID ${id}:`, error);
       throw error;
     }
   }
@@ -128,11 +139,12 @@ export class RecipesService extends BaseService<Recipe> {
 
   private async validateRecipeData(
     recipeData: RecipeInput | Partial<RecipeInput>,
-    softValidating?: boolean
+    isPartial: boolean = false
   ) {
     try {
       let result: Joi.ValidationResult;
-      if (softValidating) {
+
+      if (isPartial) {
         result = softRecipeSchema.validate(recipeData);
       } else {
         const existingRecipe = await this.recipeRepository.findOne({
@@ -158,9 +170,14 @@ export class RecipesService extends BaseService<Recipe> {
     }
   }
 
-  private async filterRecipeData(recipeData: RecipeInput) {
+  private async filterRecipeData(
+    recipeData: RecipeInput | Partial<RecipeInput>
+  ) {
     try {
-      await this.validateRecipeData(recipeData);
+      await this.validateRecipeData(
+        recipeData,
+        'instructions' in recipeData === false
+      );
 
       const {
         instructions,
@@ -181,7 +198,6 @@ export class RecipesService extends BaseService<Recipe> {
     try {
       // Validate and prepare recipe data
       const data = await this.filterRecipeData(recipeData);
-      console.log('Creating recipe with data:', data.recipe);
 
       // Create the main recipe
       const rawRecipe = await this.recipeRepository.create(
@@ -228,12 +244,15 @@ export class RecipesService extends BaseService<Recipe> {
 
   private async createRecipeIngredients(
     recipeId: number,
-    ingredients: RecipeInput['ingredients'],
+    ingredients: IngredientDTO[] | undefined,
     transaction: Transaction
   ) {
+    if (!ingredients) return;
+
     for (const ingredient of ingredients) {
       const { measurement, quantity, ...filteredIngredient } =
         ingredient;
+      console.log('Processing ingredient:', ingredient.name);
 
       const [rawCreatedIngredient] = await Ingredient.findOrCreate({
         where: { name: ingredient.name },
@@ -242,8 +261,12 @@ export class RecipesService extends BaseService<Recipe> {
       });
 
       const createdIngredient = rawCreatedIngredient.toJSON();
+      console.log(
+        'Created/found ingredient with ID:',
+        createdIngredient.id
+      );
 
-      await RecipeIngredient.create(
+      const recipeIngredient = await RecipeIngredient.create(
         {
           recipeId,
           ingredientId: createdIngredient.id,
@@ -252,14 +275,20 @@ export class RecipesService extends BaseService<Recipe> {
         },
         { transaction }
       );
+      console.log(
+        'Created RecipeIngredient:',
+        recipeIngredient.toJSON()
+      );
     }
   }
 
   private async createRecipeInstructions(
     recipeId: number,
-    instructions: RecipeInput['instructions'],
+    instructions: InstructionDTO[] | undefined,
     transaction: Transaction
   ) {
+    if (!instructions) return;
+
     let currentStep = 1;
     for (const instruction of instructions) {
       await Instruction.create(
@@ -292,13 +321,15 @@ export class RecipesService extends BaseService<Recipe> {
     await recipe.$set('tags', createdTags, { transaction });
   }
 
-  public async updateRecipe(
+  private async updateRecipeBase(
     recipeId: number,
-    recipeUpdates: RecipeInput
+    recipeUpdates: RecipeInput | PartialRecipeInput,
+    isReplace: boolean = false
   ) {
     const transaction = await this.sequelize.transaction();
 
     try {
+      // Find and validate recipe exists
       const recipe = await this.recipeRepository.findByPk(recipeId, {
         transaction
       });
@@ -307,186 +338,160 @@ export class RecipesService extends BaseService<Recipe> {
         throw boom.notFound('Recipe not found');
       }
 
-      await this.validateRecipeData(recipeUpdates);
-
+      // Validate and prepare update data
+      await this.validateRecipeData(recipeUpdates, !isReplace);
       const {
         instructions,
         ingredients,
         tags,
         recipe: recipeData
-      } = await this.filterRecipeData(recipeUpdates);
+      } = await this.filterRecipeData(recipeUpdates as RecipeInput);
 
-      await recipe.update(recipeData, { transaction });
-      const newIngredientsIds: number[] = [];
-      for (const ingredient of ingredients) {
-        const { measurement, quantity, ...filteredIngredient } =
-          ingredient;
+      // Update main recipe data
+      const updateData = isReplace
+        ? {
+            preparingTime: null,
+            cookingTime: null,
+            calories: null,
+            carbs: null,
+            protein: null,
+            fat: null,
+            ...recipeData
+          }
+        : recipeData;
 
-        const [createdIngredient] = await Ingredient.findOrCreate({
-          where: { name: ingredient.name },
-          defaults: filteredIngredient,
+      await recipe.update(updateData, { transaction });
+
+      // Update ingredients if provided
+      if (ingredients) {
+        await this.updateRecipeIngredients(
+          recipeId,
+          ingredients,
           transaction
-        });
-
-        newIngredientsIds.push(createdIngredient.id);
-
-        await RecipeIngredient.upsert(
-          {
-            recipeId,
-            ingredientId: createdIngredient.id,
-            quantity,
-            measurement
-          },
-          { transaction }
         );
-
-        // Remove old ingredients that are not in the new list
-        await RecipeIngredient.destroy({
-          where: {
-            recipeId,
-            ingredientId: { [Op.notIn]: newIngredientsIds }
-          },
-          transaction
-        });
-
-        // Instructions processing
-        await Instruction.destroy({
-          where: { recipeId },
-          transaction
-        });
-        let step = 1;
-        for (const instruction of instructions) {
-          await Instruction.create(
-            { ...instruction, recipeId, step: step++ },
-            { transaction }
-          );
-        }
-
-        // Tags processing
-        const newTags: Tag[] = [];
-        for (const tag of tags) {
-          const [createdTag] = await Tag.findOrCreate({
-            where: { name: tag.name },
-            defaults: tag,
-            transaction
-          });
-          newTags.push(createdTag);
-        }
-
-        await recipe.$set('tags', newTags, { transaction });
-
-        await transaction.commit();
-
-        return recipe;
       }
+
+      // Update instructions if provided
+      if (instructions) {
+        await this.updateRecipeInstructions(
+          recipeId,
+          instructions,
+          transaction
+        );
+      }
+
+      // Update tags if provided
+      if (tags?.length > 0) {
+        await this.updateRecipeTags(recipe, tags, transaction);
+      }
+
+      await transaction.commit();
+      return recipe;
     } catch (error) {
       await transaction.rollback();
-      console.error(error);
+      console.error(
+        `Error ${isReplace ? 'replacing' : 'updating'} recipe with ID ${recipeId}:`,
+        error
+      );
       throw error;
     }
+  }
+
+  public async updateRecipe(
+    recipeId: number,
+    recipeUpdates: PartialRecipeInput
+  ) {
+    return this.updateRecipeBase(recipeId, recipeUpdates, false);
   }
 
   public async replaceRecipe(
     recipeId: number,
     newRecipe: RecipeInput
   ) {
-    const transaction = await this.sequelize.transaction();
+    return this.updateRecipeBase(recipeId, newRecipe, true);
+  }
 
-    try {
-      const recipe = await this.recipeRepository.findByPk(recipeId, {
+  private async updateRecipeIngredients(
+    recipeId: number,
+    ingredients: IngredientDTO[] | undefined,
+    transaction: Transaction
+  ) {
+    if (!ingredients) return;
+
+    const newIngredientsIds: number[] = [];
+
+    for (const ingredient of ingredients) {
+      const { measurement, quantity, ...filteredIngredient } =
+        ingredient;
+
+      const [createdIngredient] = await Ingredient.findOrCreate({
+        where: { name: ingredient.name },
+        defaults: filteredIngredient,
         transaction
       });
 
-      if (!recipe) {
-        throw boom.notFound('Recipe not found');
-      }
+      newIngredientsIds.push(createdIngredient.toJSON().id);
 
-      const {
-        recipe: recipeUpdates,
-        instructions,
-        tags = [],
-        ingredients
-      } = await this.filterRecipeData(newRecipe);
+      const upsertData = {
+        recipeId,
+        ingredientId: createdIngredient.toJSON().id,
+        quantity,
+        measurement
+      };
 
-      await recipe.update(
-        {
-          preparingTime: null,
-          cookingTime: null,
-          calories: null,
-          carbs: null,
-          protein: null,
-          fat: null,
-          ...recipeUpdates
-        },
+      await RecipeIngredient.upsert(upsertData, { transaction });
+    }
+
+    // Remove old ingredients that are not in the new list
+    await RecipeIngredient.destroy({
+      where: {
+        recipeId,
+        ingredientId: { [Op.notIn]: newIngredientsIds }
+      },
+      transaction
+    });
+  }
+
+  private async updateRecipeInstructions(
+    recipeId: number,
+    instructions: InstructionDTO[] | undefined,
+    transaction: Transaction
+  ) {
+    if (!instructions) return;
+
+    // Remove old instructions
+    await Instruction.destroy({
+      where: { recipeId },
+      transaction
+    });
+
+    // Create new instructions
+    let step = 1;
+    for (const instruction of instructions) {
+      await Instruction.create(
+        { ...instruction, recipeId, step: step++ },
         { transaction }
       );
+    }
+  }
 
-      await RecipeIngredient.destroy({
-        where: { recipeId },
+  private async updateRecipeTags(
+    recipe: Recipe,
+    tags: RecipeInput['tags'] | undefined,
+    transaction: Transaction
+  ) {
+    if (!tags) return;
+
+    const newTags: Tag[] = [];
+    for (const tag of tags) {
+      const [createdTag] = await Tag.findOrCreate({
+        where: { name: tag.name },
+        defaults: tag,
         transaction
       });
-
-      const newIngredientsIds: number[] = [];
-
-      for (const ingredient of ingredients) {
-        const { measurement, quantity, ...filteredIngredient } =
-          ingredient;
-
-        const [createdIngredient] = await Ingredient.findOrCreate({
-          where: { name: ingredient.name },
-          defaults: filteredIngredient,
-          transaction
-        });
-
-        newIngredientsIds.push(createdIngredient.id);
-
-        // What if this recipe has this ingredient
-        await RecipeIngredient.create(
-          {
-            recipeId,
-            ingredientId: createdIngredient.id,
-            quantity,
-            measurement
-          },
-          { transaction }
-        );
-      }
-
-      await Instruction.destroy({ where: { recipeId }, transaction });
-      let step = 1;
-      for (const instruction of instructions) {
-        await Instruction.create(
-          {
-            ...instruction,
-            recipeId,
-            step: step++
-          },
-          { transaction }
-        );
-      }
-
-      await recipe.$set('tags', [], { transaction });
-      const newTags: Tag[] = [];
-
-      for (const tag of tags) {
-        const [createdTag] = await Tag.findOrCreate({
-          where: { name: tag.name },
-          defaults: tag,
-          transaction
-        });
-
-        newTags.push(createdTag);
-      }
-
-      await recipe.$set('tags', newTags, { transaction });
-
-      await transaction.commit();
-      return recipe;
-    } catch (error) {
-      await transaction.rollback();
-      console.error(error);
-      throw error;
+      newTags.push(createdTag);
     }
+    await recipe.$set('tags', newTags, { transaction });
   }
 
   public async deleteRecipe(recipeId: number) {

@@ -30,3 +30,11 @@ export interface RecipeWithRelations extends Recipe {
   instructions: Instruction[];
   tags: Tag[];
 }
+
+export type PartialRecipeInput = Partial<
+  Omit<RecipeInput, 'ingredients' | 'instructions' | 'tags'>
+> & {
+  ingredients?: IngredientDTO[];
+  instructions?: InstructionDTO[];
+  tags?: TagDTO[];
+};

@@ -33,6 +33,7 @@ export class RecipesService extends BaseService<Recipe> {
 
   public async getAllRecipes(options?: {
     limit?: number;
+    offset?: number;
     order?: [string, 'ASC' | 'DESC'][];
   }): Promise<RecipeWithRelations[]> {
     try {
@@ -54,8 +55,13 @@ export class RecipesService extends BaseService<Recipe> {
         ]
       };
 
+      // Set default pagination values
       if (options?.limit) {
         findOptions.limit = options.limit;
+        findOptions.offset = options.offset ?? 0;
+      } else {
+        findOptions.limit = 100;
+        findOptions.offset = options?.offset ?? 0;
       }
 
       if (options?.order) {
@@ -523,5 +529,3 @@ export class RecipesService extends BaseService<Recipe> {
     }
   }
 }
-
-//export const recipesService = new RecipesService(sequelize, Recipe);

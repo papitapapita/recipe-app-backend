@@ -41,22 +41,23 @@ export default class RecipeController {
 
   public getRecipes() {
     return tryCatch(async (req, res) => {
-      const { size } = req.query;
+      const { limit, offset } = req.query;
 
-      let parsedSize: number | undefined;
-      let recipes;
-      if (size) {
-        parsedSize = parseInt(size as string);
-        if (!parsedSize || parsedSize <= 0) {
-          throw boom.badRequest('Invalid size parameter');
-        }
-        recipes = await recipesService.getAllRecipes({
-          limit: parsedSize
-        });
-      } else {
-        recipes = await recipesService.getAllRecipes();
+      let parsedLimit: number | undefined;
+      let parsedOffset: number | undefined;
+
+      if (limit) {
+        parsedLimit = parseInt(limit as string);
       }
-      console.log(recipes)
+
+      if (offset) {
+        parsedOffset = parseInt(offset as string);
+      }
+
+      const recipes = await recipesService.getAllRecipes({
+        limit: parsedLimit,
+        offset: parsedOffset
+      });
 
       this.sendResponse(res, 200, 'Recipes Retrieved', recipes);
     });

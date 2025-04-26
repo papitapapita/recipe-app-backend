@@ -6,25 +6,33 @@ import {
   softRecipeSchema
 } from '../utils/schemas';
 import RecipeController from '../controllers/recipes.controller';
+import { paginationSchema } from '../utils/schemas/queries.schema';
 
 const recipeController = new RecipeController();
-
 const router = express.Router();
 
-router.get('/', recipeController.getRecipes());
+// GET /recipes - Get all recipes with pagination
+router.get(
+  '/',
+  validate(paginationSchema, 'query'),
+  recipeController.getRecipes()
+);
 
+// GET /recipes/:id - Get a specific recipe
 router.get(
   '/:id',
   validate(idSchema, 'params'),
   recipeController.getRecipe()
 );
 
+// POST /recipes - Create a new recipe
 router.post(
   '/',
   validate(recipeSchema, 'body'),
   recipeController.createRecipes()
 );
 
+// PUT /recipes/:id - Replace an existing recipe
 router.put(
   '/:id',
   validate(idSchema, 'params'),
@@ -32,6 +40,7 @@ router.put(
   recipeController.replaceRecipe()
 );
 
+// PATCH /recipes/:id - Partially update a recipe
 router.patch(
   '/:id',
   validate(idSchema, 'params'),
@@ -39,6 +48,7 @@ router.patch(
   recipeController.updateRecipe()
 );
 
+// DELETE /recipes/:id - Delete a recipe
 router.delete(
   '/:id',
   validate(idSchema, 'params'),

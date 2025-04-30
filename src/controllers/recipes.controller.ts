@@ -2,8 +2,8 @@ import { RecipesService } from '../services/recipes.service';
 import { Response } from 'express';
 import tryCatch from '../utils/tryCatch';
 import boom from '../../node_modules/@hapi/boom/lib/index';
-import { sequelize } from '../db/sequelize';
-import { Recipe } from '../db/models';
+import { sequelize } from '../database/sequelize';
+import { Recipe } from '../database/models';
 
 const recipesService = new RecipesService(sequelize, Recipe);
 

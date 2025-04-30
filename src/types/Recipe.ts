@@ -1,4 +1,9 @@
-import { Ingredient, Instruction, Recipe, Tag } from '../db/models';
+import {
+  Ingredient,
+  Instruction,
+  Recipe,
+  Tag
+} from '../database/models';
 import { IngredientDTO } from './Ingredient';
 import { InstructionDTO } from './Instruction';
 import { TagDTO } from './Tag';

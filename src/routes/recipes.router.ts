@@ -7,6 +7,7 @@ import {
 } from '../utils/schemas';
 import RecipeController from '../controllers/recipes.controller';
 import { paginationSchema } from '../utils/schemas/queries.schema';
+import checkApiKey from '../middlewares/auth';
 
 const recipeController = new RecipeController();
 const router = express.Router();
@@ -15,6 +16,7 @@ const router = express.Router();
 router.get(
   '/',
   validate(paginationSchema, 'query'),
+  checkApiKey,
   recipeController.getRecipes()
 );
 

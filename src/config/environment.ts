@@ -1,8 +1,9 @@
 import Joi from 'joi';
+import { Environment } from '../types/environment';
 
 // Define the structure of our environment variables
-export interface Environment {
-  NODE_ENV: 'development' | 'production' | 'test';
+export interface EnvironmentVariables {
+  NODE_ENV: Environment;
   PORT: number;
   DB_USER: string;
   DB_PASSWORD: string;
@@ -16,7 +17,7 @@ export interface Environment {
 }
 
 // Environment variables schema
-export const envSchema = Joi.object<Environment>({
+export const envSchema = Joi.object<EnvironmentVariables>({
   NODE_ENV: Joi.string()
     .valid('development', 'production', 'test')
     .default('development'),
@@ -35,7 +36,7 @@ export const envSchema = Joi.object<Environment>({
 });
 
 // Validate and parse environment variables
-export function validateEnv(): Environment {
+export function validateEnv(): EnvironmentVariables {
   const { error, value } = envSchema.validate(process.env, {
     abortEarly: false,
     stripUnknown: true

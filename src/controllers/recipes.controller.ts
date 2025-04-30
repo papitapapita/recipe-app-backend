@@ -41,10 +41,12 @@ export default class RecipeController {
 
   public getRecipes() {
     return tryCatch(async (req, res) => {
-      const { limit, offset } = req.query;
+      const { limit, offset, name, ingredients, tags } = req.query;
 
       let parsedLimit: number | undefined;
       let parsedOffset: number | undefined;
+      let parsedIngredients: string[] | undefined;
+      let parsedTags: string[] | undefined;
 
       if (limit) {
         parsedLimit = parseInt(limit as string);
@@ -54,9 +56,23 @@ export default class RecipeController {
         parsedOffset = parseInt(offset as string);
       }
 
+      // Parse comma-separated values
+      if (ingredients) {
+        parsedIngredients = (ingredients as string)
+          .split(',')
+          .map((i) => i.trim());
+      }
+
+      if (tags) {
+        parsedTags = (tags as string).split(',').map((t) => t.trim());
+      }
+
       const recipes = await recipesService.getAllRecipes({
         limit: parsedLimit,
-        offset: parsedOffset
+        offset: parsedOffset,
+        name: name as string,
+        ingredients: parsedIngredients,
+        tags: parsedTags
       });
 
       this.sendResponse(res, 200, 'Recipes Retrieved', recipes);

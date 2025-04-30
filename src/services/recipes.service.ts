@@ -35,8 +35,62 @@ export class RecipesService extends BaseService<Recipe> {
     limit?: number;
     offset?: number;
     order?: [string, 'ASC' | 'DESC'][];
+    ingredients?: string[];
+    tags?: string[];
+    name?: string;
   }): Promise<RecipeWithRelations[]> {
     try {
+      console.log('Search options:', options);
+      let recipeIds: number[] | undefined;
+
+      // If we have ingredient or tag filters, first find matching recipe IDs
+      if (
+        (options?.ingredients && options.ingredients.length > 0) ||
+        (options?.tags && options.tags.length > 0)
+      ) {
+        console.log(
+          'Searching for recipes with ingredients:',
+          options.ingredients
+        );
+        console.log('Searching for recipes with tags:', options.tags);
+
+        // First find recipes with matching ingredients
+        if (options?.ingredients && options.ingredients.length > 0) {
+          const ingredientQuery = await this.sequelize.query(
+            `
+            SELECT DISTINCT "Recipe"."id"
+            FROM "recipes" AS "Recipe"
+            INNER JOIN "recipes_ingredients" AS "RecipeIngredient" ON "Recipe"."id" = "RecipeIngredient"."recipe_id"
+            INNER JOIN "ingredients" AS "Ingredient" ON "Ingredient"."id" = "RecipeIngredient"."ingredient_id"
+            WHERE "Ingredient"."name" ILIKE ANY(ARRAY[${options.ingredients.map((i) => `'%${i}%'`).join(',')}])
+          `,
+            { type: 'SELECT' }
+          );
+
+          recipeIds = ingredientQuery.map((r: any) => r.id);
+        }
+
+        // Then filter by tags if needed
+        if (options?.tags && options.tags.length > 0 && recipeIds) {
+          const tagQuery = await this.sequelize.query(
+            `
+            SELECT DISTINCT "Recipe"."id"
+            FROM "recipes" AS "Recipe"
+            INNER JOIN "recipes_tags" AS "RecipeTag" ON "Recipe"."id" = "RecipeTag"."recipe_id"
+            INNER JOIN "tags" AS "Tag" ON "Tag"."id" = "RecipeTag"."tag_id"
+            WHERE "Recipe"."id" IN (${recipeIds.join(',')})
+            AND "Tag"."name" IN (${options.tags.map((t) => `'${t}'`).join(',')})
+          `,
+            { type: 'SELECT' }
+          );
+
+          recipeIds = tagQuery.map((r: any) => r.id);
+        }
+
+        console.log('Found matching recipe IDs:', recipeIds);
+      }
+
+      // Now fetch complete recipes with all their data
       const findOptions: FindOptions = {
         include: [
           {
@@ -52,8 +106,21 @@ export class RecipesService extends BaseService<Recipe> {
             model: Tag,
             attributes: ['name']
           }
-        ]
+        ],
+        ...(recipeIds && recipeIds.length > 0
+          ? { where: { id: { [Op.in]: recipeIds } } }
+          : {})
       };
+
+      // Add recipe name search if provided
+      if (options?.name) {
+        findOptions.where = {
+          ...findOptions.where,
+          title: {
+            [Op.iLike]: `%${options.name}%`
+          }
+        };
+      }
 
       // Set default pagination values
       if (options?.limit) {
@@ -68,8 +135,17 @@ export class RecipesService extends BaseService<Recipe> {
         findOptions.order = options.order;
       }
 
+      console.log(
+        'Final find options:',
+        JSON.stringify(findOptions, null, 2)
+      );
       const recipes = await this.findAll(findOptions);
-      return recipes.map(this.transformRecipe);
+      console.log('Found recipes:', recipes.length);
+
+      const transformedRecipes = recipes.map(this.transformRecipe);
+      console.log('Transformed recipes:', transformedRecipes.length);
+
+      return transformedRecipes;
     } catch (error) {
       console.error('Error in getAllRecipes:', error);
       throw error;

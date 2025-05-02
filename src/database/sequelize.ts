@@ -10,18 +10,18 @@ import {
 } from './models';
 import { seedDatabase } from './seedDatabase';
 
-const USER = encodeURIComponent(config.dbUser);
-const PASSWORD = encodeURIComponent(config.dbPassword);
+const USER = encodeURIComponent(config.database.user);
+const PASSWORD = encodeURIComponent(config.database.password);
 
 //Instruction.addHooks();
 
 const sequelize = new Sequelize({
   dialect: 'postgres',
-  host: config.dbHost,
-  port: config.dbPort,
+  host: config.database.host,
+  port: config.database.port,
   username: USER,
   password: PASSWORD,
-  database: config.dbName,
+  database: config.database.name,
   models: [
     Recipe,
     Ingredient,

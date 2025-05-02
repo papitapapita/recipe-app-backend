@@ -16,7 +16,7 @@ export default function checkApiKey(
   }
 
   try {
-    const configApiKey = String(config.apiKey);
+    const configApiKey = String(config.security.apiKey);
     const isValid = timingSafeEqual(
       Buffer.from(apiKey),
       Buffer.from(configApiKey)

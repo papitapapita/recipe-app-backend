@@ -4,3 +4,4 @@ export { Instruction } from './instruction.model';
 export { Tag } from './tag.model';
 export { RecipeIngredient } from './recipeIngredient.model';
 export { RecipeTag } from './recipeTag.model';
+export { User } from './user.model';

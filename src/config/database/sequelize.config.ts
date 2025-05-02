@@ -1,6 +1,4 @@
-import { SequelizeOptions } from 'sequelize-typescript';
 import { config as appConfig } from '../config';
-import { Dialect } from 'sequelize';
 import { Environment } from '../../types/environment';
 
 // Encode database credentials
@@ -8,8 +6,8 @@ const USER = encodeURIComponent(appConfig.database.user);
 const PASSWORD = encodeURIComponent(appConfig.database.password);
 
 // Base configuration shared across environments
-const baseConfig: Partial<SequelizeOptions> = {
-  dialect: 'postgres' as Dialect,
+const baseConfig = {
+  dialect: 'postgres',
   host: appConfig.database.host,
   port: appConfig.database.port,
   username: USER,
@@ -22,7 +20,7 @@ const baseConfig: Partial<SequelizeOptions> = {
 };
 
 // Environment-specific configurations
-const dbConfig: Record<Environment, SequelizeOptions> = {
+const dbConfig = {
   development: {
     ...baseConfig,
     logging: console.log // Log all queries
@@ -42,3 +40,6 @@ export const sequelizeConfig = dbConfig[appConfig.env as Environment];
 
 // Export all configurations for testing purposes
 export const allConfigs = dbConfig;
+
+// Export the configuration in the format Sequelize CLI expects
+module.exports = dbConfig;

@@ -6,7 +6,8 @@ import {
   Recipe,
   RecipeIngredient,
   RecipeTag,
-  Tag
+  Tag,
+  User
 } from './models';
 import { seedDatabase } from './seedDatabase';
 
@@ -28,7 +29,8 @@ const sequelize = new Sequelize({
     Tag,
     Instruction,
     RecipeTag,
-    RecipeIngredient
+    RecipeIngredient,
+    User
   ],
   modelMatch: (filename, member) => {
     return (

@@ -45,7 +45,7 @@ export class UserService {
 
     const isPasswordValid = await bcrypt.compare(
       password,
-      user.password
+      user.toJSON().password
     );
 
     if (!isPasswordValid) {

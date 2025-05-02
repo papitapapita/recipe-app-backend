@@ -1,4 +1,8 @@
-import { Recipe, Ingredient, RecipeIngredient } from '../src/db/models';
+import {
+  Recipe,
+  Ingredient,
+  RecipeIngredient
+} from '../src/database/models';
 import { beforeEach, describe, expect, test } from '@jest/globals';
 
 const testRecipes = [

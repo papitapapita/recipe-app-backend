@@ -1,4 +1,4 @@
-import { Instruction, Recipe } from '../src/db/models';
+import { Instruction, Recipe } from '../src/database/models';
 import {
   describe,
   test,

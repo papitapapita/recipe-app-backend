@@ -7,7 +7,7 @@ import {
   RecipeIngredient,
   Instruction,
   RecipeTag
-} from '../src/db/models';
+} from '../src/database/models';
 import { RecipesService } from '../src/services/recipes.service';
 
 let sequelize: Sequelize;
@@ -24,7 +24,11 @@ beforeAll(async () => {
       Instruction,
       RecipeTag
     ],
-    logging: false
+    logging: false,
+    define: {
+      timestamps: true,
+      underscored: true
+    }
   });
 
   await sequelize.sync({ force: true });

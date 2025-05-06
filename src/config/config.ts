@@ -20,7 +20,9 @@ export const config = {
   },
   security: {
     apiKey: env.API_KEY,
-    jwtSecret: env.JWT_SECRET
+    jwtSecret: env.JWT_SECRET,
+    saltRounds: env.SALT_ROUNDS,
+    jwtExpiresIn: env.JWT_EXPIRES_IN
   },
   logging: {
     level: env.LOG_LEVEL

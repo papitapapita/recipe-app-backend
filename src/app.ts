@@ -1,6 +1,5 @@
 import express from 'express';
 import routerApi from './routes/index.routes';
-//import 'reflect-metadata';
 import { config } from './config/config';
 import passport from 'passport';
 import { localStrategy } from './utils/auth/strategies/local.strategy';

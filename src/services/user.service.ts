@@ -1,31 +1,30 @@
 import bcrypt from 'bcrypt';
 import { User } from '../database/models';
 import boom from '@hapi/boom';
+import jwt from 'jsonwebtoken';
+import { config } from '../config/config';
+
+const SALT_ROUNDS = config.security.saltRounds ?? 10;
+const JWT_EXPIRES_IN = config.security.jwtExpiresIn ?? '1h';
 
 export class UserService {
-  /**
-   * Creates a new user with a hashed password
-   */
+  /** Create a new user, throwing if the email is taken */
   async createUser(
     name: string,
     email: string,
-    password: string
+    rawPassword: string
   ): Promise<User> {
-    const existingUser = await this.findByEmail(email);
-    if (existingUser) {
+    if (await this.findByEmail(email)) {
       throw boom.conflict('User with this email already exists');
     }
 
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const password = await bcrypt.hash(rawPassword, SALT_ROUNDS);
 
-    const user = await User.create({
+    return await User.create({
       name,
       email,
-      password: hashedPassword
+      password
     });
-
-    return user;
   }
 
   /**
@@ -48,7 +47,7 @@ export class UserService {
     const user = await this.findByEmail(email);
 
     if (!user) {
-      return null;
+      throw boom.unauthorized('Invalid email or password');
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -57,18 +56,20 @@ export class UserService {
     );
 
     if (!isPasswordValid) {
-      return null;
+      throw boom.unauthorized('Invalid email or password');
     }
 
     return user;
   }
-  /*
+
   async signToken(user: User): Promise<string> {
     const payload = {
       sub: user.id,
       email: user.email
     };
 
-    return jwt.sign(payload, config.jwtSecret, { expiresIn: '1h' });
-  }*/
+    return jwt.sign(payload, config.security.jwtSecret, {
+      expiresIn: JWT_EXPIRES_IN as any
+    });
+  }
 }

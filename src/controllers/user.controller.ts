@@ -10,6 +10,9 @@ export default class UserController {
     this.userService = new UserService();
   }
 
+  /**
+   * Standardized success response
+   */
   private sendResponse<T>(
     res: Response,
     statusCode: number,
@@ -26,12 +29,6 @@ export default class UserController {
   public register() {
     return tryCatch(async (req, res) => {
       const { name, email, password } = req.body;
-
-      // Check if user already exists
-      const existingUser = await this.userService.findByEmail(email);
-      if (existingUser) {
-        throw boom.conflict('User with this email already exists');
-      }
 
       const user = await this.userService.createUser(
         name,
@@ -63,8 +60,10 @@ export default class UserController {
         throw boom.unauthorized('Invalid email or password');
       }
 
+      const token = await this.userService.signToken(user);
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user.toJSON();
+      userWithoutPassword.token = token;
 
       this.sendResponse(
         res,

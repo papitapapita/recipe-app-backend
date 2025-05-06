@@ -14,6 +14,8 @@ export interface EnvironmentVariables {
   CORS_ORIGIN: string;
   JWT_SECRET: string;
   LOG_LEVEL: 'error' | 'warn' | 'info' | 'debug';
+  SALT_ROUNDS: number;
+  JWT_EXPIRES_IN: string;
 }
 
 // Environment variables schema
@@ -32,7 +34,12 @@ export const envSchema = Joi.object<EnvironmentVariables>({
   JWT_SECRET: Joi.string().required(),
   LOG_LEVEL: Joi.string()
     .valid('error', 'warn', 'info', 'debug')
-    .default('info')
+    .default('info'),
+  SALT_ROUNDS: Joi.number().default(10),
+  JWT_EXPIRES_IN: Joi.string()
+    .pattern(/^[1-9]\d*(?:ms|s|m|h|d)$/)
+    .default('1h')
+    .description('JWT expiration time, e.g. "30m", "1h", "2d"')
 });
 
 // Validate and parse environment variables

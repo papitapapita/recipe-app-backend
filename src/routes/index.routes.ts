@@ -1,6 +1,6 @@
 import { Router, Express } from 'express';
-import recipesRouter from './recipes.router';
-import userRouter from './user.router';
+import recipesRouter from './recipes.routes';
+import userRouter from './user.routes';
 
 export default function routerApi(app: Express) {
   const router = Router();

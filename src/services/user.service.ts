@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import { User } from '../database/models';
+import boom from '@hapi/boom';
 
 export class UserService {
   /**
@@ -10,14 +11,21 @@ export class UserService {
     email: string,
     password: string
   ): Promise<User> {
+    const existingUser = await this.findByEmail(email);
+    if (existingUser) {
+      throw boom.conflict('User with this email already exists');
+    }
+
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    return await User.create({
+    const user = await User.create({
       name,
       email,
       password: hashedPassword
     });
+
+    return user;
   }
 
   /**
@@ -54,4 +62,13 @@ export class UserService {
 
     return user;
   }
+  /*
+  async signToken(user: User): Promise<string> {
+    const payload = {
+      sub: user.id,
+      email: user.email
+    };
+
+    return jwt.sign(payload, config.jwtSecret, { expiresIn: '1h' });
+  }*/
 }

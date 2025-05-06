@@ -27,7 +27,6 @@ export default class UserController {
     return tryCatch(async (req, res) => {
       const { name, email, password } = req.body;
 
-      console.log(req.body);
       // Check if user already exists
       const existingUser = await this.userService.findByEmail(email);
       if (existingUser) {

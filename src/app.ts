@@ -1,11 +1,11 @@
 import express from 'express';
-import 'dotenv/config';
-import process from 'node:process';
-import routerApi from './routes/index.router';
-import 'reflect-metadata';
+import routerApi from './routes/index.routes';
+//import 'reflect-metadata';
+import { config } from './config/config';
+import passport from 'passport';
+import { localStrategy } from './utils/auth/strategies/local.strategy';
 
 const app = express();
-const { PORT } = process.env || 3000;
 
 app.use(express.json());
 
@@ -13,8 +13,12 @@ app.get('/', (_req, res) => {
   res.send('Hello');
 });
 
+passport.use(localStrategy);
+
+app.use(passport.initialize());
+
 routerApi(app);
 
-app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
+app.listen(config.port, () => {
+  console.log(`Server running on ${config.port}`);
 });

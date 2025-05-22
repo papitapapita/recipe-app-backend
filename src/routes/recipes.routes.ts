@@ -8,15 +8,18 @@ import {
 import RecipeController from '../controllers/recipes.controller';
 import { paginationSchema } from '../utils/schemas/queries.schema';
 import checkApiKey from '../middlewares/auth';
+import passport from 'passport';
 
 const recipeController = new RecipeController();
 const router = express.Router();
+
+router.use(passport.authenticate('jwt', { session: false }));
 
 // GET /recipes - Get all recipes with pagination
 router.get(
   '/',
   validate(paginationSchema, 'query'),
-  checkApiKey,
+  checkApiKey, //This CheckApiKey is here only to show off the use of api keys
   recipeController.getRecipes()
 );
 

@@ -2,7 +2,7 @@ import express from 'express';
 import routerApi from './routes/index.routes';
 import { config } from './config/config';
 import passport from 'passport';
-import { localStrategy } from './utils/auth/strategies/local.strategy';
+import { localStrategy, jwtStrategy } from './utils/auth/strategies';
 
 const app = express();
 
@@ -13,6 +13,7 @@ app.get('/', (_req, res) => {
 });
 
 passport.use(localStrategy);
+passport.use(jwtStrategy);
 
 app.use(passport.initialize());
 

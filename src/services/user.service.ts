@@ -12,7 +12,8 @@ export class UserService {
   async createUser(
     name: string,
     email: string,
-    rawPassword: string
+    rawPassword: string,
+    role: string
   ): Promise<User> {
     if (await this.findByEmail(email)) {
       throw boom.conflict('User with this email already exists');
@@ -23,7 +24,8 @@ export class UserService {
     return await User.create({
       name,
       email,
-      password
+      password,
+      role
     });
   }
 
@@ -59,14 +61,18 @@ export class UserService {
       throw boom.unauthorized('Invalid email or password');
     }
 
-    return user;
+    return user.toJSON();
   }
 
   async signToken(user: User): Promise<string> {
+    console.log('Service User: ', user);
     const payload = {
       sub: user.id,
-      email: user.email
+      email: user.email,
+      role: user.role
     };
+
+    console.log('Token payload:', payload);
 
     return jwt.sign(payload, config.security.jwtSecret, {
       expiresIn: JWT_EXPIRES_IN as any

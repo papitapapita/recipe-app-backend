@@ -41,6 +41,13 @@ export class User extends Model {
   })
   password!: string;
 
+  @Column({
+    type: DataType.ENUM('admin', 'customer', 'chef'),
+    allowNull: false,
+    defaultValue: 'customer'
+  })
+  role!: string;
+
   @CreatedAt
   created_at!: Date;
 

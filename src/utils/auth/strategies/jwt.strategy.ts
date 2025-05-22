@@ -8,6 +8,7 @@ export const jwtStrategy = new Strategy(
   },
   (payload, done) => {
     try {
+      console.log('JWT Payload: ', payload);
       return done(null, payload);
     } catch (error) {
       return done(error, false);

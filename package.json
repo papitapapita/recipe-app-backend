@@ -14,7 +14,7 @@
     "seed:generate": "npx sequelize-cli seed:generate --name",
     "db:drop": "NODE_OPTIONS='-r ts-node/register' npx sequelize-cli db:drop",
     "db:create": "NODE_OPTIONS='-r ts-node/register' npx sequelize-cli db:create",
-    "mingration:run": "npm run build && NODE_OPTIONS='-r ts-node/register' npx sequelize-cli db:migrate",
+    "migration:run": "npm run build && NODE_OPTIONS='-r ts-node/register' npx sequelize-cli db:migrate",
     "migration:revert": "npm run build && NODE_OPTIONS='-r ts-node/register' npx sequelize-cli db:migrate:undo",
     "migration:generate": "NODE_OPTIONS='-r ts-node/register' npx sequelize-cli migration:generate --name",
     "seed:ingredients": "npm run build && NODE_OPTIONS='-r ts-node/register' npx sequelize-cli db:seed --seed 20250421154148-demo-ingredients.ts",

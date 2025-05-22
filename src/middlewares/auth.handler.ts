@@ -25,6 +25,17 @@ export function authenticate(
   )(req, res, next);
 }
 
+export function checkRole(...roles: string[]) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    console.log('User: ', req.user);
+    if (!req.user || !roles.includes(req.user.role)) {
+      return next(boom.unauthorized('Unauthorized'));
+    }
+
+    next();
+  };
+}
+
 export function checkAuth(
   req: Request,
   res: Response,

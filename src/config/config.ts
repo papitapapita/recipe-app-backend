@@ -26,6 +26,12 @@ export const config = {
   },
   logging: {
     level: env.LOG_LEVEL
+  },
+  mailing: {
+    user: env.EMAIL_USER,
+    smptHost: env.SMTP_HOST,
+    smptPort: env.SMTP_PORT,
+    pass: env.EMAIL_PASS
   }
 } as const;
 

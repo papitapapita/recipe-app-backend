@@ -1,6 +1,7 @@
 import { Strategy } from 'passport-local';
 import { UserService } from '../../../services/user.service';
 import boom from '@hapi/boom';
+import { Role } from '../../../types/Role';
 
 const userService = new UserService();
 
@@ -16,7 +17,13 @@ export const localStrategy = new Strategy(
         done(boom.unauthorized('Invalid credentials'), false);
         return;
       }
-      done(null, user);
+      const safeUser = {
+        id: user.id,
+        email: user.email,
+        role: user.role as Role
+      };
+
+      done(null, safeUser);
     } catch (error) {
       done(error, false);
     }

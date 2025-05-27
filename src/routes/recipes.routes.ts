@@ -10,6 +10,7 @@ import { paginationSchema } from '../utils/schemas/queries.schema';
 import checkApiKey from '../middlewares/auth';
 import passport from 'passport';
 import { checkRole } from '../middlewares/auth.handler';
+import { Role } from '../types/Role';
 
 const recipeController = new RecipeController();
 const router = express.Router();
@@ -19,7 +20,7 @@ router.use(passport.authenticate('jwt', { session: false }));
 // GET /recipes - Get all recipes with pagination
 router.get(
   '/',
-  checkRole('customer', 'admin', 'chef'),
+  checkRole(Role.Customer, Role.Admin, Role.Chef),
   validate(paginationSchema, 'query'),
   checkApiKey, //This CheckApiKey is here only to show off the use of api keys
   recipeController.getRecipes()
@@ -28,7 +29,7 @@ router.get(
 // GET /recipes/:id - Get a specific recipe
 router.get(
   '/:id',
-  checkRole('customer', 'admin', 'chef'),
+  checkRole(Role.Customer, Role.Admin, Role.Chef),
   validate(idSchema, 'params'),
   recipeController.getRecipe()
 );
@@ -36,7 +37,7 @@ router.get(
 // POST /recipes - Create a new recipe
 router.post(
   '/',
-  checkRole('admin', 'chef'),
+  checkRole(Role.Admin, Role.Chef),
   validate(recipeSchema, 'body'),
   recipeController.createRecipes()
 );
@@ -44,7 +45,7 @@ router.post(
 // PUT /recipes/:id - Replace an existing recipe
 router.put(
   '/:id',
-  checkRole('admin', 'chef'),
+  checkRole(Role.Admin, Role.Chef),
   validate(idSchema, 'params'),
   validate(recipeSchema, 'body'),
   recipeController.replaceRecipe()
@@ -53,7 +54,7 @@ router.put(
 // PATCH /recipes/:id - Partially update a recipe
 router.patch(
   '/:id',
-  checkRole('admin', 'chef'),
+  checkRole(Role.Admin, Role.Chef),
   validate(idSchema, 'params'),
   validate(softRecipeSchema, 'body'),
   recipeController.updateRecipe()
@@ -62,7 +63,7 @@ router.patch(
 // DELETE /recipes/:id - Delete a recipe
 router.delete(
   '/:id',
-  checkRole('admin'),
+  checkRole(Role.Admin),
   validate(idSchema, 'params'),
   recipeController.deleteRecipe()
 );

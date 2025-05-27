@@ -1,9 +1,14 @@
 declare global {
   namespace Express {
+    enum Role {
+      Admin = 'admin',
+      Customer = 'customer',
+      Chef = 'chef'
+    }
     interface User {
       id: number;
       email: string;
-      role: string;
+      role: Role;
     }
 
     interface Request {

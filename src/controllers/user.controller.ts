@@ -1,5 +1,4 @@
 import { Response } from 'express';
-import jwt from 'jsonwebtoken';
 import tryCatch from '../utils/tryCatch';
 import boom from '@hapi/boom';
 import { UserService } from '../services/user.service';
@@ -63,10 +62,7 @@ export default class UserController {
         throw boom.unauthorized('Invalid email or password');
       }
 
-      console.log('Controller User: ', user);
       const token = await this.userService.signToken(user);
-      console.log('Signed Token: ', token);
-      console.log('Decoed: ', jwt.decode(token));
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
       //userWithoutPassword.token = token;
@@ -75,6 +71,22 @@ export default class UserController {
         user: userWithoutPassword,
         token
       });
+    });
+  }
+
+  public recover() {
+    return tryCatch(async (req, res) => {
+      const { email } = req.body;
+
+      const accepted =
+        await this.userService.sendRecoveryEmail(email);
+
+      this.sendResponse(
+        res,
+        200,
+        `Email ${accepted ? '' : 'not'} sent`,
+        {}
+      );
     });
   }
 }

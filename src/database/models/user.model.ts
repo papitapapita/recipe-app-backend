@@ -6,10 +6,12 @@ import {
   CreatedAt,
   UpdatedAt
 } from 'sequelize-typescript';
+import { Role } from '../../types/Role';
 
 @Table({
   tableName: 'users',
-  underscored: true
+  underscored: true,
+  timestamps: true
 })
 export class User extends Model {
   @Column({
@@ -17,7 +19,7 @@ export class User extends Model {
     autoIncrement: true,
     primaryKey: true
   })
-  id!: number;
+  declare id: number;
 
   @Column({
     type: DataType.STRING,
@@ -27,30 +29,37 @@ export class User extends Model {
       isEmail: true
     }
   })
-  email!: string;
+  declare email: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false
   })
-  name!: string;
+  declare name: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false
   })
-  password!: string;
+  declare password: string;
 
   @Column({
-    type: DataType.ENUM('admin', 'customer', 'chef'),
+    type: DataType.ENUM(...Object.values(Role)),
     allowNull: false,
-    defaultValue: 'customer'
+    defaultValue: Role.Customer
   })
-  role!: string;
+  declare role: Role;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'recovery_token'
+  })
+  declare recoveryToken: string | null;
 
   @CreatedAt
-  created_at!: Date;
+  declare created_at: Date;
 
   @UpdatedAt
-  updated_at!: Date;
+  declare updated_at: Date;
 }

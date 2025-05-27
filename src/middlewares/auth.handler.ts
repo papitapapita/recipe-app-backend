@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import boom from '@hapi/boom';
+import { Role } from '../types/Role';
 
 export function authenticate(
   req: Request,
@@ -25,7 +26,7 @@ export function authenticate(
   )(req, res, next);
 }
 
-export function checkRole(...roles: string[]) {
+export function checkRole(...roles: Role[]) {
   return (req: Request, _res: Response, next: NextFunction) => {
     console.log('User: ', req.user);
     if (!req.user || !roles.includes(req.user.role)) {

@@ -113,7 +113,34 @@ export class UserService extends BaseService<User> {
     }
   }
 
-  async deleteUser(userId: User['id']);
+  /**
+   * Deletes a user
+   * @param userId
+   * @returns
+   */
+  async deleteUser(userId: User['id']) {
+    const transaction = await this.sequelize.transaction();
+
+    try {
+      const user = await this.userRepository.findByPk(userId, {
+        transaction
+      });
+
+      if (!user) {
+        throw boom.notFound('User not found');
+      }
+
+      await user.destroy({ transaction });
+      await transaction.commit();
+      return { message: 'User deleted successfully' };
+    } catch (error) {
+      await transaction.rollback();
+      console.error(
+        `Error deleting user with ID ${userId}: ${error}`
+      );
+      throw error;
+    }
+  }
 
   /**
    * Finds a user by their email address

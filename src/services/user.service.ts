@@ -7,8 +7,7 @@ import nodemailer from 'nodemailer';
 import { Sequelize } from 'sequelize';
 import { BaseService } from './base.service';
 import { Repository } from 'sequelize-typescript';
-import { PartialUserInput, UserDTO, UserInput } from '../types/User';
-import { recipeIngredientSchema } from '../utils/schemas';
+import { PartialUserInput, UserInput } from '../types/User';
 
 const SALT_ROUNDS = config.security.saltRounds ?? 10;
 const JWT_EXPIRES_IN = config.security.jwtExpiresIn ?? '1h';
@@ -98,6 +97,13 @@ export class UserService extends BaseService<User> {
 
       if (!user) {
         throw boom.notFound('User not found');
+      }
+
+      if (userUpdates.password) {
+        userUpdates.password = await bcrypt.hash(
+          userUpdates.password,
+          SALT_ROUNDS
+        );
       }
 
       const userUpdated = await user.update(userUpdates, {
@@ -242,12 +248,20 @@ export class UserService extends BaseService<User> {
   }
 
   async changePassword(token: string, password: string) {
+    const transaction = await this.sequelize.transaction();
+
     try {
       const payload: any = jwt.verify(
         token,
         config.security.jwtSecret
       );
-      const user = await this.sequelize.findByPk;
+      const user = await this.userRepository.findByPk(payload.id, {
+        transaction
+      });
+
+      if (!user) {
+        throw boom.notFound('User not found');
+      }
 
       console.log('Usuario: ', user.toJSON());
       console.log('Payload: ', payload);
@@ -257,12 +271,20 @@ export class UserService extends BaseService<User> {
       }
 
       const hash = await bcrypt.hash(password, 10);
-      return await user.update({
-        password: hash,
-        recoveryToken: null
-      });
+      const userUpdated = await user.update(
+        {
+          password: hash,
+          recoveryToken: null
+        },
+        { transaction }
+      );
+      await transaction.commit();
+      return userUpdated;
     } catch (error) {
-      console.error(error);
+      transaction.rollback();
+      console.error(
+        `There was an error changing the password ${error}`
+      );
       throw error;
     }
   }

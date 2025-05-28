@@ -7,6 +7,8 @@ import nodemailer from 'nodemailer';
 import { Sequelize } from 'sequelize';
 import { BaseService } from './base.service';
 import { Repository } from 'sequelize-typescript';
+import { PartialUserInput, UserDTO, UserInput } from '../types/User';
+import { recipeIngredientSchema } from '../utils/schemas';
 
 const SALT_ROUNDS = config.security.saltRounds ?? 10;
 const JWT_EXPIRES_IN = config.security.jwtExpiresIn ?? '1h';
@@ -79,6 +81,39 @@ export class UserService extends BaseService<User> {
       throw error;
     }
   }
+
+  /**
+   * Update a user by their email
+   */
+  async updateUser(
+    userId: User['id'],
+    userUpdates: UserInput | PartialUserInput
+  ) {
+    const transaction = await this.sequelize.transaction();
+
+    try {
+      const user = await this.userRepository.findByPk(userId, {
+        transaction
+      });
+
+      if (!user) {
+        throw boom.notFound('User not found');
+      }
+
+      const userUpdated = await user.update(userUpdates, {
+        transaction
+      });
+      await transaction.commit();
+
+      return userUpdated;
+    } catch (error) {
+      await transaction.rollback();
+      console.error(`Error updating user with ID ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  async deleteUser(userId: User['id']);
 
   /**
    * Finds a user by their email address

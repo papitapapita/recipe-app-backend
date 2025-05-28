@@ -30,6 +30,21 @@ export class UserService extends BaseService<User> {
     }
   }
 
+  public async getUser(id: User['id']) {
+    try {
+      const user = await this.findById(id);
+
+      if (!user) {
+        throw boom.notFound(`User with ID ${id} not found`);
+      }
+
+      return user;
+    } catch (error) {
+      console.error(`Error fetching user with ID ${id}:`, error);
+      throw error;
+    }
+  }
+
   /** Create a new user, throwing if the email is taken */
   async createUser(
     name: string,

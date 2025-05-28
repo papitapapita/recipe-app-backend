@@ -4,6 +4,7 @@ import boom from '@hapi/boom';
 import { UserService } from '../services/user.service';
 import { sequelize } from '../database/sequelize';
 import { User } from '../database/models';
+import { readFileSync } from 'fs';
 
 export default class UserController {
   private userService: UserService;
@@ -43,6 +44,14 @@ export default class UserController {
       const user = await this.userService.getUser(id);
 
       this.sendResponse(res, 200, 'User Retrieved', user);
+    });
+  }
+
+  public getUsers() {
+    return tryCatch(async (req, res) => {
+      const users = await this.userService.getAllUsers();
+
+      this.sendResponse(res, 200, 'Users Retrieved', users);
     });
   }
 

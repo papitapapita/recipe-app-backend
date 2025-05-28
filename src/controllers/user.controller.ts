@@ -4,7 +4,6 @@ import boom from '@hapi/boom';
 import { UserService } from '../services/user.service';
 import { sequelize } from '../database/sequelize';
 import { User } from '../database/models';
-import { readFileSync } from 'fs';
 
 export default class UserController {
   private userService: UserService;
@@ -41,9 +40,18 @@ export default class UserController {
     return tryCatch(async (req, res) => {
       const id = this.validateId(req.params.id);
 
-      const user = await this.userService.getUser(id);
+      const {
+        password: _,
+        recoveryToken: __,
+        ...userWithoutPassword
+      } = await this.userService.getUser(id);
 
-      this.sendResponse(res, 200, 'User Retrieved', user);
+      this.sendResponse(
+        res,
+        200,
+        'User Retrieved',
+        userWithoutPassword
+      );
     });
   }
 
@@ -51,7 +59,13 @@ export default class UserController {
     return tryCatch(async (req, res) => {
       const users = await this.userService.getAllUsers();
 
-      this.sendResponse(res, 200, 'Users Retrieved', users);
+      const cleanedUsers = users.map((user) => ({
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }));
+
+      this.sendResponse(res, 200, 'Users Retrieved', cleanedUsers);
     });
   }
 
@@ -67,12 +81,36 @@ export default class UserController {
       );
 
       // Remove password from response
-      const { password: _, ...userWithoutPassword } = user.toJSON();
+      const {
+        password: _,
+        recoveryToken: __,
+        ...userWithoutPassword
+      } = user;
 
       this.sendResponse(
         res,
         201,
         'User registered successfully',
+        userWithoutPassword
+      );
+    });
+  }
+
+  public updateUser() {
+    return tryCatch(async (req, res) => {
+      const { body } = req;
+      const id = this.validateId(req.params.id);
+
+      const {
+        password: _,
+        recoveryToken: __,
+        ...userWithoutPassword
+      } = await this.userService.updateUser(id, body);
+
+      this.sendResponse(
+        res,
+        201,
+        'User updated successfully',
         userWithoutPassword
       );
     });

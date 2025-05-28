@@ -273,7 +273,6 @@ export class RecipesService extends BaseService<Recipe> {
         }
       );
       const recipe = rawRecipe.toJSON();
-      console.log('Created recipe with ID:', recipe.id);
 
       // Create ingredients and their relationships
       await this.createRecipeIngredients(
@@ -299,7 +298,6 @@ export class RecipesService extends BaseService<Recipe> {
       }
 
       await transaction.commit();
-      console.log('Transaction committed successfully');
       return recipe;
     } catch (error) {
       await transaction.rollback();

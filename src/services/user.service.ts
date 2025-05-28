@@ -52,18 +52,32 @@ export class UserService extends BaseService<User> {
     rawPassword: string,
     role: string
   ): Promise<User> {
-    if (await this.findByEmail(email)) {
-      throw boom.conflict('User with this email already exists');
+    const transaction = await this.sequelize.transaction();
+
+    try {
+      if (await this.findByEmail(email)) {
+        throw boom.conflict('User with this email already exists');
+      }
+
+      const password = await bcrypt.hash(rawPassword, SALT_ROUNDS);
+
+      const user = await User.create(
+        {
+          name,
+          email,
+          password,
+          role
+        },
+        { transaction }
+      );
+
+      await transaction.commit();
+      return user;
+    } catch (error) {
+      await transaction.rollback();
+      console.error('Error in createUser:', error);
+      throw error;
     }
-
-    const password = await bcrypt.hash(rawPassword, SALT_ROUNDS);
-
-    return await User.create({
-      name,
-      email,
-      password,
-      role
-    });
   }
 
   /**

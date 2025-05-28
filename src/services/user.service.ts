@@ -4,12 +4,23 @@ import boom from '@hapi/boom';
 import jwt from 'jsonwebtoken';
 import { config } from '../config/config';
 import nodemailer from 'nodemailer';
+import { Sequelize } from 'sequelize';
+import { BaseService } from './base.service';
+import { Repository } from 'sequelize-typescript';
 
 const SALT_ROUNDS = config.security.saltRounds ?? 10;
 const JWT_EXPIRES_IN = config.security.jwtExpiresIn ?? '1h';
 const PORT = config.mailing.smptPort;
 
-export class UserService {
+export class UserService extends BaseService<User> {
+  constructor(
+    private sequelize: Sequelize,
+    private userRepository: Repository<User>
+  ) {
+    super(userRepository);
+    this.sequelize = sequelize;
+  }
+
   /** Create a new user, throwing if the email is taken */
   async createUser(
     name: string,
@@ -90,7 +101,7 @@ export class UserService {
       expiresIn: '15m'
     });
 
-    console.log('Hi Im here');
+    console.log(user);
     await user.update({ recoveryToken: token });
 
     const recoveryUrl = `localhost/recovery?token=${token}`;
@@ -127,6 +138,32 @@ export class UserService {
     } catch (error) {
       console.error('❌ Failed to send email:', error);
       throw boom.internal('Failed to send recovery email');
+    }
+  }
+
+  async changePassword(token: string, password: string) {
+    try {
+      const payload: any = jwt.verify(
+        token,
+        config.security.jwtSecret
+      );
+      const user = await this.sequelize.findByPk;
+
+      console.log('Usuario: ', user.toJSON());
+      console.log('Payload: ', payload);
+
+      if (user.recoveryToken !== token) {
+        throw boom.unauthorized();
+      }
+
+      const hash = await bcrypt.hash(password, 10);
+      return await user.update({
+        password: hash,
+        recoveryToken: null
+      });
+    } catch (error) {
+      console.error(error);
+      throw error;
     }
   }
 }

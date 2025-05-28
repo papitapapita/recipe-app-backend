@@ -64,7 +64,11 @@ export default class UserController {
 
       const token = await this.userService.signToken(user);
       // Remove password from response
-      const { password: _, ...userWithoutPassword } = user;
+      const {
+        password: _,
+        recoveryToken: __,
+        ...userWithoutPassword
+      } = user;
       //userWithoutPassword.token = token;
 
       this.sendResponse(res, 200, 'Login successful', {
@@ -87,6 +91,19 @@ export default class UserController {
         `Email ${accepted ? '' : 'not'} sent`,
         {}
       );
+    });
+  }
+
+  public changePassword() {
+    return tryCatch(async (req, res) => {
+      const { token, password } = req.body;
+
+      const user = await this.userService.changePassword(
+        token,
+        password
+      );
+
+      this.sendResponse(res, 200, 'Password Changed', user);
     });
   }
 }

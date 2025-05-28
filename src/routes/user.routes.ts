@@ -3,6 +3,7 @@ import UserController from '../controllers/user.controller';
 import { authenticate } from '../middlewares/auth.handler';
 import validate from '../middlewares/validator';
 import {
+  changePasswordSchema,
   loginSchema,
   recoverSchema,
   registerSchema
@@ -27,6 +28,11 @@ router.post(
   '/recovery',
   validate(recoverSchema, 'body'),
   userController.recover()
+);
+router.post(
+  '/change-password',
+  validate(changePasswordSchema, 'body'),
+  userController.changePassword()
 );
 
 export default router;

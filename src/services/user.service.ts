@@ -21,6 +21,15 @@ export class UserService extends BaseService<User> {
     this.sequelize = sequelize;
   }
 
+  public async getAllUsers() {
+    try {
+      return await this.findAll();
+    } catch (error) {
+      console.error('Error in getAllUsers:', error);
+      throw error;
+    }
+  }
+
   /** Create a new user, throwing if the email is taken */
   async createUser(
     name: string,

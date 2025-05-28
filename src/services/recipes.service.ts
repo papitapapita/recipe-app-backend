@@ -40,7 +40,6 @@ export class RecipesService extends BaseService<Recipe> {
     name?: string;
   }): Promise<RecipeWithRelations[]> {
     try {
-      console.log('Search options:', options);
       let recipeIds: number[] | undefined;
 
       // If we have ingredient or tag filters, first find matching recipe IDs
@@ -48,12 +47,6 @@ export class RecipesService extends BaseService<Recipe> {
         (options?.ingredients && options.ingredients.length > 0) ||
         (options?.tags && options.tags.length > 0)
       ) {
-        console.log(
-          'Searching for recipes with ingredients:',
-          options.ingredients
-        );
-        console.log('Searching for recipes with tags:', options.tags);
-
         // First find recipes with matching ingredients
         if (options?.ingredients && options.ingredients.length > 0) {
           const ingredientQuery = await this.sequelize.query(
@@ -86,8 +79,6 @@ export class RecipesService extends BaseService<Recipe> {
 
           recipeIds = tagQuery.map((r: any) => r.id);
         }
-
-        console.log('Found matching recipe IDs:', recipeIds);
       }
 
       // Now fetch complete recipes with all their data
@@ -135,15 +126,8 @@ export class RecipesService extends BaseService<Recipe> {
         findOptions.order = options.order;
       }
 
-      console.log(
-        'Final find options:',
-        JSON.stringify(findOptions, null, 2)
-      );
       const recipes = await this.findAll(findOptions);
-      console.log('Found recipes:', recipes.length);
-
       const transformedRecipes = recipes.map(this.transformRecipe);
-      console.log('Transformed recipes:', transformedRecipes.length);
 
       return transformedRecipes;
     } catch (error) {

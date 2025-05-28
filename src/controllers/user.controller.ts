@@ -2,12 +2,22 @@ import { Response } from 'express';
 import tryCatch from '../utils/tryCatch';
 import boom from '@hapi/boom';
 import { UserService } from '../services/user.service';
+import { sequelize } from '../database/sequelize';
+import { User } from '../database/models';
 
 export default class UserController {
   private userService: UserService;
 
   constructor() {
-    this.userService = new UserService();
+    this.userService = new UserService(sequelize, User);
+  }
+
+  private validateId(id: string | undefined): number {
+    if (id === undefined || isNaN(parseInt(id))) {
+      throw boom.badRequest('Invalid or missing ID');
+    }
+
+    return parseInt(id);
   }
 
   /**
@@ -23,6 +33,16 @@ export default class UserController {
       success: true,
       message,
       data
+    });
+  }
+
+  public getUser() {
+    return tryCatch(async (req, res) => {
+      const id = this.validateId(req.params.id);
+
+      const user = await this.userService.getUser(id);
+
+      this.sendResponse(res, 200, 'User Retrieved', user);
     });
   }
 

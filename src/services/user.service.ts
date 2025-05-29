@@ -255,7 +255,8 @@ export class UserService extends BaseService<User> {
         token,
         config.security.jwtSecret
       );
-      const user = await this.userRepository.findByPk(payload.id, {
+      console.log('Payload: ', payload);
+      const user = await this.userRepository.findByPk(payload.sub, {
         transaction
       });
 
@@ -264,7 +265,6 @@ export class UserService extends BaseService<User> {
       }
 
       console.log('Usuario: ', user.toJSON());
-      console.log('Payload: ', payload);
 
       if (user.recoveryToken !== token) {
         throw boom.unauthorized();

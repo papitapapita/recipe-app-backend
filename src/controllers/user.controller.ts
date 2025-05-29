@@ -56,7 +56,7 @@ export default class UserController {
   }
 
   public getUsers() {
-    return tryCatch(async (req, res) => {
+    return tryCatch(async (_req, res) => {
       const users = await this.userService.getAllUsers();
 
       const cleanedUsers = users.map((user) => ({
@@ -175,12 +175,18 @@ export default class UserController {
     return tryCatch(async (req, res) => {
       const { token, password } = req.body;
 
-      const user = await this.userService.changePassword(
-        token,
-        password
-      );
+      const {
+        password: _,
+        recoveryToken: __,
+        ...userWithoutPassword
+      } = await this.userService.changePassword(token, password);
 
-      this.sendResponse(res, 200, 'Password Changed', user);
+      this.sendResponse(
+        res,
+        200,
+        'Password Changed',
+        userWithoutPassword
+      );
     });
   }
 }

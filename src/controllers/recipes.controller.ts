@@ -122,7 +122,7 @@ export default class RecipeController {
     return tryCatch(async (req, res) => {
       const id = this.validateId(req.params.id);
 
-      recipesService.deleteRecipe(id);
+      await recipesService.deleteRecipe(id);
 
       this.sendResponse(res, 201, 'Recipe Deleted');
     });

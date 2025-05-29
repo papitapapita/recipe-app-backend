@@ -116,6 +116,16 @@ export default class UserController {
     });
   }
 
+  public deleteUser() {
+    return tryCatch(async (req, res) => {
+      const id = this.validateId(req.params.id);
+
+      await this.userService.deleteUser(id);
+
+      this.sendResponse(res, 201, 'User Deleted');
+    });
+  }
+
   public login() {
     return tryCatch(async (req, res) => {
       const { email, password } = req.body;
